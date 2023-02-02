@@ -1,12 +1,15 @@
-from bs4 import BeautifulSoup
 import requests
-from tkinter import *
 import random
 import json
 import re
-import hikari
 import time
-import conf
+import configparser
+
+from bs4 import BeautifulSoup
+import hikari
+
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 tier_to_roman = {
     '1': 'I',
@@ -120,7 +123,7 @@ def fact():
         return res
 
 
-bot = hikari.GatewayBot(token=conf.token)
+bot = hikari.GatewayBot(token=config['discord']['token'])
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
