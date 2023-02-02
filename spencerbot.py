@@ -41,15 +41,9 @@ for d in items_json:
 
 def web_scrape():
     try:
-        # url = "https://www.op.gg/summoners/na/The%20NMEs%20Support"
-        # source = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
+        url = "https://www.op.gg/summoners/na/The%20NMEs%20Support"
+        source = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
 
-        # f = open("test.txt", "w", encoding="utf-8")
-        # f.write(source)
-        # f.close()
-
-        f = open("test.txt", "r", encoding="utf-8")
-        source = f.read()
         soup = BeautifulSoup(source, "html.parser")
         rank_div = soup.find("div", {"class": "css-1v663t e1x14w4w1"})
         tier = rank_div.find("div", {"class": "tier"}).text
@@ -138,7 +132,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     if me.id in event.message.user_mentions_ids:
         await event.message.respond(fact())
         refresh()
-        time.sleep(5)
+        time.sleep(3)
         await event.message.respond(web_scrape())
         await event.message.respond(opapi())
 
