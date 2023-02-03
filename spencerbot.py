@@ -19,13 +19,13 @@ tier_to_roman = {
 }
 
 def place(num):
-    place = {
-        '1': 'st',
-        '2': 'nd',
-        '3': 'rd',
+    suffix = {
+        1: 'st',
+        2: 'nd',
+        3: 'rd',
     }
-    if str(num) in place:
-        return place[num]
+    if num in suffix:
+        return suffix[num]
     else:
         return 'th'
 
@@ -86,7 +86,7 @@ def opapi():
 
     # Return OP Score, KDA, Damage, Wards, CS, Items
     stats = my_player['stats']
-    return f"```Latest game:\nResult: {stats['result']}\nOP Score: {stats['op_score_rank']}{place(stats['op_score_rank'])}\nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
+    return f"```Latest game:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}\nWard Placed: {stats['ward_place']}\
         \nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
