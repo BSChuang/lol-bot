@@ -62,9 +62,8 @@ def web_scrape():
         return e
 
 def item_id_to_list(list):
-    miss = list.index(0)
-    if miss != -1:
-        list = list[:miss]
+    if 0 in list:
+        list = list[:list.index(0)]
     items = [items_dict[x] for x in list]
     return ', '.join(items)
 
