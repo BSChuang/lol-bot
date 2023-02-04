@@ -105,7 +105,7 @@ def opapi():
     stats = my_player['stats']
     return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
-        \nDamage Done/Taken: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}\nWard Placed: {stats['ward_place']}\
+        \nDamage Done/Taken: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}\nTotal Heal:{stats['total_heal']}\nWard Placed: {stats['ward_place']}\
         \nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
 
@@ -131,7 +131,7 @@ def fact():
         res = compiled.sub("Spencer", fact)
         return res
     except Exception as e:
-        return res
+        return e
 
 latest_event = None
 
@@ -163,6 +163,9 @@ async def check_for_new_game():
             print("Ping the bot first")
             continue
 
+        refresh()
+        time.sleep(3)
+
         source = get_game_json()
 
         last_game = source['data'][0]
@@ -174,10 +177,10 @@ async def check_for_new_game():
         if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
             await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
 
-            refresh()
-            time.sleep(3)
             await latest_event.message.respond(web_scrape())
             await latest_event.message.respond(opapi())
+        else:
+            print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
 
 
 if __name__ == "__main__":
