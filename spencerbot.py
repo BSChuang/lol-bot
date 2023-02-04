@@ -105,8 +105,8 @@ def opapi():
     stats = my_player['stats']
     return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
-        \nDamage Done/Taken: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}\nTotal Heal:{stats['total_heal']}\nWard Placed: {stats['ward_place']}\
-        \nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
+        \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
+        \nWard Placed: {stats['ward_place']}\\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
 
 def refresh():
@@ -164,7 +164,7 @@ async def check_for_new_game():
             continue
 
         refresh()
-        time.sleep(3)
+        asyncio.sleep(3)
 
         source = get_game_json()
 
@@ -184,5 +184,6 @@ async def check_for_new_game():
 
 
 if __name__ == "__main__":
+    print(datetime.now())
     asyncio.get_event_loop().create_task(check_for_new_game())
     bot.run()
