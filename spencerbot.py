@@ -114,9 +114,10 @@ def refresh():
         url = "https://op.gg/api/v1.0/internal/bypass/summoners/na/mGQycLPH483CDFWmBqEVRPFCBurCtpQOfLPlhYd3mzKsR6Q/renewal"
         res = requests.post(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
         print("Refreshed")
+        return res
     except:
         print("Can't refresh")
-    return res
+    
 
 
 
