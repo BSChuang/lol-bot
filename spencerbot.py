@@ -106,7 +106,7 @@ def opapi():
     return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
-        \nWard Placed: {stats['ward_place']}\\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
+        \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
 
 def refresh():
