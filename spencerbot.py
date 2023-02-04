@@ -164,7 +164,7 @@ async def check_for_new_game():
             continue
 
         refresh()
-        asyncio.sleep(3)
+        await asyncio.sleep(3)
 
         source = get_game_json()
 
