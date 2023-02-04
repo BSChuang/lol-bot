@@ -4,6 +4,10 @@ import json
 import re
 import time
 import configparser
+from datetime import datetime, timedelta
+import threading
+import asyncio
+
 
 from bs4 import BeautifulSoup
 import hikari
@@ -11,12 +15,26 @@ import hikari
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-tier_to_roman = {
-    '1': 'I',
-    '2': 'II',
-    '3': 'III',
-    '4': 'IV'
-}
+bot = hikari.GatewayBot(token=config['discord']['token'])
+
+items_json = None
+with open("items.json") as file:
+    file = open("items.json")
+    items_json = json.load(file)
+    file.close()
+
+items_dict = {}
+for d in items_json:
+    items_dict[d['id']] = d['name']
+
+def tier_to_roman(tier):
+    tier_to_roman = {
+        '1': 'I',
+        '2': 'II',
+        '3': 'III',
+        '4': 'IV'
+    }
+    return tier_to_roman[tier]
 
 def place(num):
     suffix = {
@@ -28,16 +46,12 @@ def place(num):
         return suffix[num]
     else:
         return 'th'
-
-items_json = None
-with open("items.json") as file:
-    file = open("items.json")
-    items_json = json.load(file)
-    file.close()
-
-items_dict = {}
-for d in items_json:
-    items_dict[d['id']] = d['name']
+    
+def item_id_to_list(list):
+    if 0 in list:
+        list = list[:list.index(0)]
+    items = [items_dict[x] for x in list]
+    return ', '.join(items)
 
 def web_scrape():
     try:
@@ -57,36 +71,40 @@ def web_scrape():
                 percentage = div.find("div", {"class": {"css-b0uosc e1g7spwk0"}}).text
                 count = div.find("div", {"class": {"count"}}).text.split()[0]
 
-        return f"Bencer currently is {tier[:-2]} {tier_to_roman[tier[-1]]}, {lp} with a Sion winrate of {percentage} over {count} games"
+        return f"Bencer is currently {tier[:-2]} {tier_to_roman(tier[-1])}, {lp} with a Sion winrate of {percentage} over {count} games"
     except Exception as e:
         return e
-
-def item_id_to_list(list):
-    if 0 in list:
-        list = list[:list.index(0)]
-    items = [items_dict[x] for x in list]
-    return ', '.join(items)
-
-def opapi():
+    
+def get_game_json():
     url = "https://op.gg/api/v1.0/internal/bypass/games/na/summoners/mGQycLPH483CDFWmBqEVRPFCBurCtpQOfLPlhYd3mzKsR6Q?&limit=20&hl=en_US&game_type=total"
     text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
     source = json.loads(text)
+    return source
+
+def opapi():
+    source = get_game_json()
 
     game_list = source['data']
 
     my_player = None
+    my_game = None
     for game in game_list:
         if game['queue_info']['game_type'] == 'SOLORANKED' and game['myData']['champion_id'] == 14:
+            my_game = game
             my_player = game['myData']
             break
-
             
     if my_player is None:
         return "No solo/duo Sion found in past 20 games"
+    
+    start_time_str = my_game['created_at']
+    duration = my_game['game_length_second']
+    end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14) + timedelta(seconds=duration)
 
     # Return OP Score, KDA, Damage, Wards, CS, Items
     stats = my_player['stats']
-    return f"```Latest game:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
+    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
+        \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}\nWard Placed: {stats['ward_place']}\
         \nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
@@ -115,12 +133,11 @@ def fact():
     except Exception as e:
         return res
 
-
-bot = hikari.GatewayBot(token=config['discord']['token'])
+latest_event = None
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
-    """If a non-bot user mentions your bot, respond with 'Pong!'."""
+    global latest_event
 
     # Do not respond to bots nor webhooks pinging us, only user accounts
     if not event.is_human:
@@ -129,11 +146,38 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     me = bot.get_me()
 
     if me.id in event.message.user_mentions_ids:
+        latest_event = event
         await event.message.respond(fact())
         refresh()
         time.sleep(3)
         await event.message.respond(web_scrape())
         await event.message.respond(opapi())
 
-if True:
+async def check_for_new_game():
+    global latest_event
+    frequency = 180
+    while True:
+        await asyncio.sleep(frequency)
+        
+        if latest_event is None:
+            print("Ping the bot first")
+            continue
+
+        source = get_game_json()
+
+        start_time_str = source['data'][0]['created_at']
+        duration = source['data'][0]['game_length_second']
+        end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14) + timedelta(seconds=duration)
+
+        if (datetime.now() - end_time).seconds < frequency * 1.5:
+            await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
+
+            refresh()
+            time.sleep(3)
+            await latest_event.message.respond(web_scrape())
+            await latest_event.message.respond(opapi())
+
+
+if __name__ == "__main__":
+    asyncio.get_event_loop().create_task(check_for_new_game())
     bot.run()
