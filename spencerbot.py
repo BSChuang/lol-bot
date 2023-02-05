@@ -98,8 +98,8 @@ def opapi():
         return "No solo/duo Sion found in past 20 games"
     
     start_time_str = my_game['created_at']
-    duration = my_game['game_length_second']
-    end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14) + timedelta(seconds=duration)
+    #duration = my_game['game_length_second']
+    end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
 
     # Return OP Score, KDA, Damage, Wards, CS, Items
     stats = my_player['stats']
@@ -172,8 +172,8 @@ async def check_for_new_game():
         last_game = source['data'][0]
 
         start_time_str = last_game['created_at']
-        duration = last_game['game_length_second']
-        end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14) + timedelta(seconds=duration)
+        #duration = last_game['game_length_second']
+        end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
 
         if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
             await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
