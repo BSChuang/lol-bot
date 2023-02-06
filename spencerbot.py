@@ -187,6 +187,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     me = bot.get_me()
 
     if me.id in event.message.user_mentions_ids:
+        print(event.message.content)
         if event.message.content == '!dominos':
             dominos(event)
         elif event.message.content == '!relapse':
