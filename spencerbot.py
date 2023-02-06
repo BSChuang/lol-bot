@@ -15,7 +15,7 @@ import hikari
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-# bot = hikari.GatewayBot(token=config['discord']['token'])
+bot = hikari.GatewayBot(token=config['discord']['token'])
 
 items_json = None
 with open("items.json") as file:
@@ -176,28 +176,28 @@ async def relapse(event):
 
 latest_event = None
 
-# @bot.listen()
-# async def ping(event: hikari.GuildMessageCreateEvent) -> None:
-#     global latest_event
+@bot.listen()
+async def ping(event: hikari.GuildMessageCreateEvent) -> None:
+    global latest_event
 
-#     # Do not respond to bots nor webhooks pinging us, only user accounts
-#     if not event.is_human:
-#         return
+    # Do not respond to bots nor webhooks pinging us, only user accounts
+    if not event.is_human:
+        return
 
-#     me = bot.get_me()
+    me = bot.get_me()
 
-#     if me.id in event.message.user_mentions_ids:
-#         if event.message.content == '!dominos':
-#             dominos(event)
-#         elif event.message.content == '!relapse':
-#             relapse(event)
-#         else:
-#             latest_event = event
-#             await event.message.respond(fact())
-#             refresh()
-#             time.sleep(3)
-#             await event.message.respond(web_scrape())
-#             await event.message.respond(opapi())
+    if me.id in event.message.user_mentions_ids:
+        if event.message.content == '!dominos':
+            dominos(event)
+        elif event.message.content == '!relapse':
+            relapse(event)
+        else:
+            latest_event = event
+            await event.message.respond(fact())
+            refresh()
+            time.sleep(3)
+            await event.message.respond(web_scrape())
+            await event.message.respond(opapi())
 
 async def check_for_new_game():
     global latest_event
@@ -234,5 +234,5 @@ async def check_for_new_game():
 
 if __name__ == "__main__":
     print(datetime.now())
-    # asyncio.get_event_loop().create_task(check_for_new_game())
-    # bot.run()
+    asyncio.get_event_loop().create_task(check_for_new_game())
+    bot.run()
