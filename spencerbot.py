@@ -15,7 +15,7 @@ import hikari
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-bot = hikari.GatewayBot(token=config['discord']['token'])
+# bot = hikari.GatewayBot(token=config['discord']['token'])
 
 items_json = None
 with open("items.json") as file:
@@ -117,8 +117,6 @@ def refresh():
         return res
     except:
         print("Can't refresh")
-    
-
 
 
 def fact():
@@ -133,26 +131,73 @@ def fact():
         return res
     except Exception as e:
         return e
+    
+def read_dominos():
+    with open('dominos.txt', 'r') as file:
+        return float(file.read())
+
+
+def write_dominos():
+    with open('dominos.txt', 'w') as file:
+        file.write(str(datetime.timestamp(datetime.now())))
+
+def td_format(td_object):
+    seconds = int(td_object.total_seconds())
+    periods = [
+        ('year',        60*60*24*365),
+        ('month',       60*60*24*30),
+        ('day',         60*60*24),
+        ('hour',        60*60),
+        ('minute',      60),
+        ('second',      1)
+    ]
+
+    strings=[]
+    for period_name, period_seconds in periods:
+        if seconds > period_seconds:
+            period_value , seconds = divmod(seconds, period_seconds)
+            has_s = 's' if period_value > 1 else ''
+            strings.append("%s %s%s" % (period_value, period_name, has_s))
+
+    return ", ".join(strings)
+
+async def dominos(event):
+    last_dominos_time = read_dominos()
+    secs = (datetime.timestamp(datetime.now()) - last_dominos_time)
+    result = td_format(timedelta(seconds = secs))
+    await event.message.respond(f"Last Dominos was {result} ago")
+
+async def relapse(event):
+    write_dominos()
+    
+    emote = random.choice(['sadspencer', 'sleepyspencer', 'spencer', 'spencer2', 'spencerangel', 'spencerbaby', 'spencerflirt', 'supersadspencer'])
+    await event.message.respond(f":{emote}:")
+
 
 latest_event = None
 
-@bot.listen()
-async def ping(event: hikari.GuildMessageCreateEvent) -> None:
-    global latest_event
+# @bot.listen()
+# async def ping(event: hikari.GuildMessageCreateEvent) -> None:
+#     global latest_event
 
-    # Do not respond to bots nor webhooks pinging us, only user accounts
-    if not event.is_human:
-        return
+#     # Do not respond to bots nor webhooks pinging us, only user accounts
+#     if not event.is_human:
+#         return
 
-    me = bot.get_me()
+#     me = bot.get_me()
 
-    if me.id in event.message.user_mentions_ids:
-        latest_event = event
-        await event.message.respond(fact())
-        refresh()
-        time.sleep(3)
-        await event.message.respond(web_scrape())
-        await event.message.respond(opapi())
+#     if me.id in event.message.user_mentions_ids:
+#         if event.message.content == '!dominos':
+#             dominos(event)
+#         elif event.message.content == '!relapse':
+#             relapse(event)
+#         else:
+#             latest_event = event
+#             await event.message.respond(fact())
+#             refresh()
+#             time.sleep(3)
+#             await event.message.respond(web_scrape())
+#             await event.message.respond(opapi())
 
 async def check_for_new_game():
     global latest_event
@@ -164,27 +209,30 @@ async def check_for_new_game():
             print("Ping the bot first")
             continue
 
-        refresh()
-        await asyncio.sleep(3)
+        try:
+            refresh()
+            await asyncio.sleep(3)
 
-        source = get_game_json()
+            source = get_game_json()
 
-        last_game = source['data'][0]
+            last_game = source['data'][0]
 
-        start_time_str = last_game['created_at']
-        #duration = last_game['game_length_second']
-        end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
+            start_time_str = last_game['created_at']
+            #duration = last_game['game_length_second']
+            end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
 
-        if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
-            await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
+            if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
+                await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
 
-            await latest_event.message.respond(web_scrape())
-            await latest_event.message.respond(opapi())
-        else:
-            print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
+                await latest_event.message.respond(web_scrape())
+                await latest_event.message.respond(opapi())
+            else:
+                print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
+        except Exception as e:
+            print(e)
 
 
 if __name__ == "__main__":
     print(datetime.now())
-    asyncio.get_event_loop().create_task(check_for_new_game())
-    bot.run()
+    # asyncio.get_event_loop().create_task(check_for_new_game())
+    # bot.run()
