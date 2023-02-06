@@ -170,8 +170,9 @@ async def dominos(event):
 async def relapse(event):
     write_dominos()
     
-    emote = random.choice(['sadspencer', 'sleepyspencer', 'spencer', 'spencer2', 'spencerangel', 'spencerbaby', 'spencerflirt', 'supersadspencer'])
-    await event.message.respond(f":{emote}:")
+    emote = random.choice(['<:sadspencer:976908811904385104>', ':sleepyspencer:', '<:spencer:968679218550550569>', '<:spencer2:972178114941714492>',\
+                          '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
+    await event.message.respond(emote)
 
 
 latest_event = None
@@ -189,9 +190,9 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     if me.id in event.message.user_mentions_ids:
         print(event.message.content)
         if '!dominos' in event.message.content:
-            dominos(event)
+            await dominos(event)
         elif '!relapse' in event.message.content:
-            relapse(event)
+            await relapse(event)
         else:
             latest_event = event
             await event.message.respond(fact())
