@@ -188,9 +188,9 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
 
     if me.id in event.message.user_mentions_ids:
         print(event.message.content)
-        if event.message.content == '!dominos':
+        if '!dominos' in event.message.content:
             dominos(event)
-        elif event.message.content == '!relapse':
+        elif '!relapse' in event.message.content:
             relapse(event)
         else:
             latest_event = event
