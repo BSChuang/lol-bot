@@ -5,9 +5,10 @@ import re
 import time
 import configparser
 from datetime import datetime, timedelta
-import threading
 import asyncio
+import openai
 
+# Replace YOUR_API_KEY with your OpenAI API key
 
 from bs4 import BeautifulSoup
 import hikari
@@ -16,6 +17,7 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 
 bot = hikari.GatewayBot(token=config['discord']['token'])
+openai.api_key = config['discord']['openai_key']
 
 items_json = None
 with open("items.json") as file:
@@ -174,6 +176,19 @@ async def relapse(event):
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
     await event.message.respond(emote)
 
+async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048):
+    completion = openai.Completion.create(
+        engine=chatbot,
+        prompt=prompt,
+        max_tokens=max_tokens,
+        temperature=0.5,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+    )
+
+    return completion.choices[0].text
+
 
 latest_event = None
 
@@ -193,13 +208,18 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             await dominos(event)
         elif '!relapse' in event.message.content:
             await relapse(event)
-        else:
+        elif '!sion' in event.message.content:
             latest_event = event
             await event.message.respond(fact())
             refresh()
             time.sleep(3)
             await event.message.respond(web_scrape())
             await event.message.respond(opapi())
+        else:
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
+            print(prompt)
+            res = await chat(prompt)
+            await event.message.respond(res)
 
 async def check_for_new_game():
     global latest_event
