@@ -177,17 +177,21 @@ async def relapse(event):
     await event.message.respond(emote)
 
 async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048):
-    completion = openai.Completion.create(
-        engine=chatbot,
-        prompt=prompt,
-        max_tokens=max_tokens,
-        temperature=0.5,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
+    try:
+        completion = openai.Completion.create(
+            engine=chatbot,
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=0.5,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+        return completion.choices[0].text
+    except Exception as e:
+        return e
 
-    return completion.choices[0].text
+    
 
 
 latest_event = None
@@ -215,6 +219,8 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             time.sleep(3)
             await event.message.respond(web_scrape())
             await event.message.respond(opapi())
+        elif '!image' in event.message.content:
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!image', '').strip()
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
             print(prompt)
