@@ -176,8 +176,11 @@ async def relapse(event):
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
     await event.message.respond(emote)
 
-async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048):
+async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = None):
     try:
+        if event is not None:
+            await event.message.respond(f"Thinking...")
+        
         completion = openai.Completion.create(
             engine=chatbot,
             prompt=prompt,
@@ -224,7 +227,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
             print(prompt)
-            res = await chat(prompt)
+            res = await chat(prompt, event=event)
             await event.message.respond(res)
 
 async def check_for_new_game():
