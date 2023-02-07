@@ -176,6 +176,8 @@ async def relapse(event):
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
     await event.message.respond(emote)
 
+
+prev_messages = []
 async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = None):
     try:
         if event is not None:
@@ -183,13 +185,19 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
         
         completion = openai.Completion.create(
             engine=chatbot,
-            prompt=prompt,
+            prompt='\n'.join(prev_messages) + '\n' + prompt,
             max_tokens=max_tokens,
             temperature=0.5,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
         )
+
+        if len(prev_messages) > 10:
+            prev_messages.pop(0)
+        prev_messages.append(prompt)
+
+
         return completion.choices[0].text
     except Exception as e:
         return e
