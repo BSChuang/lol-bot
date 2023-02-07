@@ -226,8 +226,10 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!image', '').strip()
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
-            print(prompt)
             res = await chat(prompt, event=event)
+            while len(res) > 1900:
+                await event.message.respond(res[:1900])
+                res = res[1900:]
             await event.message.respond(res)
 
 async def check_for_new_game():
