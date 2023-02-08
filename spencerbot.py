@@ -182,29 +182,34 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
     try:
         if event is not None:
             await event.message.respond(f"Thinking...")
+
+        qa = [f"Q:{q}\nA:{a}" for q, a in prev_messages]
         
-        if len(prev_messages) > 0:
-            prompt = '\n'.join(prev_messages) + '\n' + prompt
+        full_prompt = '\n'.join(qa) + '\nQ:' + prompt + '\nA:' if len(prev_messages) > 0 else f"Q:{prompt}\nA:"
+
+        print(full_prompt)
 
         completion = openai.Completion.create(
             engine=chatbot,
-            prompt=prompt,
+            prompt=full_prompt,
             max_tokens=max_tokens,
             temperature=0.5,
             top_p=1,
             frequency_penalty=0,
-            presence_penalty=0,
-            stop=["\n"]
+            presence_penalty=0
         )
+        answer = completion.choices[0].text.strip()
 
         if len(prev_messages) > 10:
             prev_messages.pop(0)
-        prev_messages.append(prompt)
+        prev_messages.append((prompt, answer))
 
+        print(f"RES: {completion.choices[0].text}")
 
-        return completion.choices[0].text
+        return completion.choices[0].text if len(completion.choices[0].text) > 0 else "No response"
     except Exception as e:
-        return "CHATGPT error"
+        print(e)
+        return str(e)
 
     
 
