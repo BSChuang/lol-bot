@@ -210,6 +210,11 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 4096, event = 
     except Exception as e:
         print(e)
         return str(e)
+    
+def clear():
+    global prev_messages
+    prev_messages = []
+    return "Cleared message history"
 
     
 
@@ -239,8 +244,8 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             time.sleep(3)
             await event.message.respond(web_scrape())
             await event.message.respond(opapi())
-        elif '!image' in event.message.content:
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!image', '').strip()
+        elif '!clear' in event.message.content:
+            await event.message.respond(clear())
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
             res = await chat(prompt, event=event)
