@@ -200,7 +200,7 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
         )
         answer = completion.choices[0].text.strip()
 
-        if len(prev_messages) > 10:
+        if len(prev_messages) > 6:
             prev_messages.pop(0)
         prev_messages.append((prompt, answer))
 
