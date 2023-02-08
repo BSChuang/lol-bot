@@ -75,7 +75,7 @@ def web_scrape():
 
         return f"Bencer is currently {tier[:-2]} {tier_to_roman(tier[-1])}, {lp} with a Sion winrate of {percentage} over {count} games"
     except Exception as e:
-        return e
+        return str(e)
     
 def get_game_json():
     url = "https://op.gg/api/v1.0/internal/bypass/games/na/summoners/mGQycLPH483CDFWmBqEVRPFCBurCtpQOfLPlhYd3mzKsR6Q?&limit=20&hl=en_US&game_type=total"
@@ -132,7 +132,7 @@ def fact():
         res = compiled.sub("Spencer", fact)
         return res
     except Exception as e:
-        return e
+        return str(e)
     
 def read_dominos():
     with open('dominos.txt', 'r') as file:
@@ -200,7 +200,7 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
 
         return completion.choices[0].text
     except Exception as e:
-        return e
+        return str(e)
 
     
 
