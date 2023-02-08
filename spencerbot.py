@@ -183,9 +183,12 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
         if event is not None:
             await event.message.respond(f"Thinking...")
         
+        if len(prev_messages) > 0:
+            prompt = '\n'.join(prev_messages) + '\n' + prompt
+
         completion = openai.Completion.create(
             engine=chatbot,
-            prompt=f"{'\n'.join(prev_messages)}{'\n' if len(prev_messages) > 0}{prompt}",
+            prompt=prompt,
             max_tokens=max_tokens,
             temperature=0.5,
             top_p=1,
