@@ -190,7 +190,8 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
             temperature=0.5,
             top_p=1,
             frequency_penalty=0,
-            presence_penalty=0
+            presence_penalty=0,
+            stop=["\n"]
         )
 
         if len(prev_messages) > 10:
