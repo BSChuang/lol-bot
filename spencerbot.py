@@ -185,7 +185,7 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
         
         completion = openai.Completion.create(
             engine=chatbot,
-            prompt='\n'.join(prev_messages) + '\n' + prompt,
+            prompt=f"{'\n'.join(prev_messages)}{'\n' if len(prev_messages) > 0}{prompt}",
             max_tokens=max_tokens,
             temperature=0.5,
             top_p=1,
@@ -201,7 +201,7 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
 
         return completion.choices[0].text
     except Exception as e:
-        return str(e)
+        return "CHATGPT error"
 
     
 
