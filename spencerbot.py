@@ -178,7 +178,7 @@ async def relapse(event):
 
 
 prev_messages = []
-async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = None):
+async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 4096, event = None):
     try:
         if event is not None:
             await event.message.respond(f"Thinking...")
