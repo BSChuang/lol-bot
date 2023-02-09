@@ -178,12 +178,17 @@ async def relapse(event):
 
 
 prev_messages = []
-async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 4096, event = None):
+async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = None):
     try:
         if event is not None:
             await event.message.respond(f"Thinking...")
 
-        qa = [f"Q:{q}\nA:{a}" for q, a in prev_messages]
+        qa = ""
+        for q, a in prev_messages:
+            next_qa = f"Q:{q}\nA:{a}"
+            if len((qa + next_qa).split(' ')) > 2048:
+                break
+            qa += next_qa
         
         full_prompt = '\n'.join(qa) + '\nQ:' + prompt + '\nA:' if len(prev_messages) > 0 else f"Q:{prompt}\nA:"
 
