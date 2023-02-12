@@ -284,6 +284,7 @@ async def check_for_new_game():
             print("Ping the bot first")
             continue
 
+        new_game = False
         try:
             refresh()
             await asyncio.sleep(3)
@@ -297,6 +298,7 @@ async def check_for_new_game():
             end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
 
             if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
+                new_game = True
                 await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
 
                 await latest_event.message.respond(web_scrape())
@@ -304,7 +306,10 @@ async def check_for_new_game():
             else:
                 print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
         except Exception as e:
-            print(e)
+            if new_game:
+                print(e)
+                await asyncio.sleep(30)
+                await latest_event.message.respond(opapi())
 
 
 if __name__ == "__main__":
