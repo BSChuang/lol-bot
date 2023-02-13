@@ -134,14 +134,20 @@ def fact():
     except Exception as e:
         return str(e)
     
+def read(filename):
+    with open(filename, 'r') as file:
+        return file.read()
+    
+def write(filename, text):
+    with open(filename, 'w') as file:
+        file.write(text)
+    
 def read_dominos():
-    with open('dominos.txt', 'r') as file:
-        return float(file.read())
+    return float(read('dominos.txt'))
 
 
 def write_dominos():
-    with open('dominos.txt', 'w') as file:
-        file.write(str(datetime.timestamp(datetime.now())))
+    write('dominos.txt', str(datetime.timestamp(datetime.now())))
 
 def td_format(td_object):
     seconds = int(td_object.total_seconds())
@@ -284,7 +290,6 @@ async def check_for_new_game():
             print("Ping the bot first")
             continue
 
-        new_game = False
         try:
             refresh()
             await asyncio.sleep(3)
@@ -292,24 +297,20 @@ async def check_for_new_game():
             source = get_game_json()
 
             last_game = source['data'][0]
+            last_game_timestamp = last_game['created_at']
+            prev_game_timestamp = read('prev_game_timestamp.txt')
 
-            start_time_str = last_game['created_at']
-            #duration = last_game['game_length_second']
-            end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
-
-            if (datetime.now() - end_time).seconds < frequency * 1.5 and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
-                new_game = True
+            if prev_game_timestamp != last_game_timestamp and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
                 await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
 
                 await latest_event.message.respond(web_scrape())
                 await latest_event.message.respond(opapi())
+
+                write('prev_game_timestamp.txt', last_game_timestamp)
             else:
                 print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
         except Exception as e:
-            if new_game:
-                print(e)
-                await asyncio.sleep(30)
-                await latest_event.message.respond(opapi())
+            print(e)
 
 
 if __name__ == "__main__":
