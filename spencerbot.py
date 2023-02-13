@@ -125,7 +125,7 @@ def opapi():
 
     # Return OP Score, KDA, Damage, Wards, CS, Items
     stats = my_player['stats']
-    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nGame Duration: {td_format(timedelta(seconds=int(stats['game_length_second'])))}\
+    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nGame Duration: {td_format(timedelta(seconds=int(my_game['game_length_second'])))}\
         \nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
