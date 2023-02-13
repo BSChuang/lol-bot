@@ -55,6 +55,26 @@ def item_id_to_list(list):
     items = [items_dict[x] for x in list]
     return ', '.join(items)
 
+def td_format(td_object):
+    seconds = int(td_object.total_seconds())
+    periods = [
+        ('year',        60*60*24*365),
+        ('month',       60*60*24*30),
+        ('day',         60*60*24),
+        ('hour',        60*60),
+        ('minute',      60),
+        ('second',      1)
+    ]
+
+    strings=[]
+    for period_name, period_seconds in periods:
+        if seconds > period_seconds:
+            period_value , seconds = divmod(seconds, period_seconds)
+            has_s = 's' if period_value > 1 else ''
+            strings.append("%s %s%s" % (period_value, period_name, has_s))
+
+    return ", ".join(strings)
+
 def web_scrape():
     try:
         url = "https://www.op.gg/summoners/na/The%20NMEs%20Support"
@@ -105,7 +125,8 @@ def opapi():
 
     # Return OP Score, KDA, Damage, Wards, CS, Items
     stats = my_player['stats']
-    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
+    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nGame Duration: {td_format(timedelta(seconds=int(stats['game_length_second'])))}\
+        \nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
         \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
@@ -149,25 +170,7 @@ def read_dominos():
 def write_dominos():
     write('dominos.txt', str(datetime.timestamp(datetime.now())))
 
-def td_format(td_object):
-    seconds = int(td_object.total_seconds())
-    periods = [
-        ('year',        60*60*24*365),
-        ('month',       60*60*24*30),
-        ('day',         60*60*24),
-        ('hour',        60*60),
-        ('minute',      60),
-        ('second',      1)
-    ]
 
-    strings=[]
-    for period_name, period_seconds in periods:
-        if seconds > period_seconds:
-            period_value , seconds = divmod(seconds, period_seconds)
-            has_s = 's' if period_value > 1 else ''
-            strings.append("%s %s%s" % (period_value, period_name, has_s))
-
-    return ", ".join(strings)
 
 async def dominos(event):
     last_dominos_time = read_dominos()
