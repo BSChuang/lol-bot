@@ -198,7 +198,7 @@ async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = 
         qa = ""
         for q, a in prev_messages:
             next_qa = f"Q:{q}\nA:{a}"
-            if len((qa + next_qa).split(' ')) > 1800:
+            if len((qa + next_qa).split(' ')) > 1800 - len(preface.split()):
                 break
             qa += next_qa
         
