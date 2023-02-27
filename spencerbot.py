@@ -75,6 +75,12 @@ def td_format(td_object):
 
     return ", ".join(strings)
 
+def get_most_champions_json():
+    url = "https://op.gg/api/v1.0/internal/bypass/summoners/na/mGQycLPH483CDFWmBqEVRPFCBurCtpQOfLPlhYd3mzKsR6Q/most-champions/rank?game_type=SOLORANKED&season_id=21"
+    text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
+    source = json.loads(text)
+    return source
+
 def web_scrape():
     try:
         url = "https://www.op.gg/summoners/na/The%20NMEs%20Support"
@@ -85,15 +91,21 @@ def web_scrape():
         tier = rank_div.find("div", {"class": "tier"}).text
         lp = rank_div.find("div", {"class": "lp"}).text
 
-        champ_div = soup.find_all("div", {"class": "champion-box"})
-        percentage = "NaN"
-        count = "NaN"
-        for div in champ_div:
-            if div.find("a", {"href": "/champions/sion"}) is not None:
-                percentage = div.find("div", {"class": {"css-b0uosc e1g7spwk0"}}).text
-                count = div.find("div", {"class": {"count"}}).text.split()[0]
+        # champ_div = soup.find_all("div", {"class": "champion-box"})
+        # percentage = "NaN"
+        # count = "NaN"
+        # for div in champ_div:
+        #     if div.find("a", {"href": "/champions/sion"}) is not None:
+        #         percentage = div.find("div", {"class": {"css-b0uosc e1g7spwk0"}}).text
+        #         count = div.find("div", {"class": {"count"}}).text.split()[0]
 
-        return f"Bencer is currently {tier[:-2]} {tier_to_roman(tier[-1])}, {lp} with a Sion winrate of {percentage} over {count} games"
+        most_champ_json = get_most_champions_json()
+        play, win, secs = 0, 0, 0
+        for champ in most_champ_json['data']['champion_stats']:
+            if champ['id'] == 14:
+                play, win, secs = champ['play'], champ['win'], champ['game_length_second']
+
+        return f"Bencer is currently {tier[:-2]} {tier_to_roman(tier[-1])}, {lp} with a Sion winrate of {round(win / play * 100)}% over {play} games ({td_format(timedelta(seconds=secs))})"
     except Exception as e:
         return str(e)
     
@@ -181,7 +193,7 @@ async def dominos(event):
 async def relapse(event):
     write_dominos()
     
-    emote = random.choice(['<:sadspencer:976908811904385104>', ':sleepyspencer:', '<:spencer:968679218550550569>', '<:spencer2:972178114941714492>',\
+    emote = random.choice(['<:sadspencer:976908811904385104>', '<:spencer:968679218550550569>', '<:spencer2:972178114941714492>',\
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
     await event.message.respond(emote)
 
