@@ -200,7 +200,7 @@ async def relapse(event):
 
 prev_messages = []
 preface = ""
-async def chat(prompt, chatbot = "text-davinci-003", max_tokens = 2048, event = None):
+async def chat(prompt, chatbot = "gpt-3.5-turbo", max_tokens = 2048, event = None):
     global preface
     print('preface:', preface)
     try:
