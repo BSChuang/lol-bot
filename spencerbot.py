@@ -218,24 +218,17 @@ async def chat(prompt, chatbot = "gpt-3.5-turbo", max_tokens = 2048, event = Non
 
         print("FULL PROMPT:\n", full_prompt)
 
-        completion = openai.Completion.create(
-            engine=chatbot,
-            prompt=full_prompt,
-            max_tokens=max_tokens,
-            temperature=0.5,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
+        completion = openai.ChatCompletion.create(
+            model=chatbot,
+            messages=[{"role": "user", "content": full_prompt}]
         )
-        answer = completion.choices[0].text.strip()
+        answer = completion.choices[0].message.content.strip()
 
-        if len(prev_messages) > 6:
+        if len(prev_messages) > 10:
             prev_messages.pop(0)
         prev_messages.append((prompt, answer))
 
-        print(f"{completion.choices[0].text}")
-
-        return completion.choices[0].text if len(completion.choices[0].text) > 0 else "No response"
+        return answer if len(answer) > 0 else "No response"
     except Exception as e:
         print(e)
         return str(e)
