@@ -208,9 +208,9 @@ async def chat(prompt, event = None):
             await event.message.add_reaction("🤔")
 
         if '!te' in prompt[:3]:
-            prompt = {'role': 'user', 'content': f'Please translate and explain each part of the following sentence in English: {prompt[3:]}'}
+            prompt = f"Please translate the following sentence(s) and explain the in-depth grammar of each word in English: {prompt[3:]}"
         elif '!t' in prompt[:2]:
-            prompt = {'role': 'user', 'content': f'Please translate the following sentence in English: {prompt[2:]}'}
+            prompt = f'Please translate the following sentence in English: {prompt[2:]}'
 
 
         messages.append({'role': 'user', 'content': prompt})
@@ -224,6 +224,10 @@ async def chat(prompt, event = None):
         if len(messages) > 20 or sum(len(x['content'].split()) for x in messages) > 2000:
             messages.pop(0)
             messages.pop(0)
+
+        if 'help.openai.com' in answer:
+            messages.pop(len(messages) - 1)
+            messages.pop(len(messages) - 1)
 
         return answer if len(answer) > 0 else "No response"
     except Exception as e:
