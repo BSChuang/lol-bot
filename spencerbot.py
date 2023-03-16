@@ -198,35 +198,30 @@ async def relapse(event):
     await event.message.respond(emote)
 
 
-prev_messages = []
+messages = []
 preface = ""
-async def chat(prompt, chatbot = "gpt-3.5-turbo", max_tokens = 2048, event = None):
+async def chat(prompt, chatbot = "gpt-3.5-turbo", event = None):
     global preface
     print('preface:', preface)
     try:
         if event is not None:
             await event.message.add_reaction("🤔")
 
-        qa = ""
-        for q, a in prev_messages:
-            next_qa = f"Q:{q}\nA:{a}"
-            if len((qa + next_qa).split(' ')) > 1800 - len(preface.split()):
-                break
-            qa += next_qa
-        
-        full_prompt = preface + qa + '\nQ:' + prompt + '\nA:' if len(prev_messages) > 0 else preface + f"\n\nQ:{prompt}\nA:"
+        messages.append({'role': 'user', 'content': prompt})
 
-        print("FULL PROMPT:\n", full_prompt)
+        print(messages)
 
         completion = openai.ChatCompletion.create(
             model=chatbot,
-            messages=[{"role": "user", "content": full_prompt}]
+            messages= [{'role': 'system', 'content': preface}] + messages
         )
         answer = completion.choices[0].message.content.strip()
 
-        if len(prev_messages) > 10:
-            prev_messages.pop(0)
-        prev_messages.append((prompt, answer))
+        messages.append({'role': 'assistant', 'content': answer})
+
+        if len(messages) > 20 or sum(len(x['content'].split()) for x in messages) > 2000:
+            messages.pop(0)
+            messages.pop(0)
 
         return answer if len(answer) > 0 else "No response"
     except Exception as e:
