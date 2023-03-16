@@ -200,22 +200,24 @@ async def relapse(event):
 
 messages = []
 preface = ""
-async def chat(prompt, chatbot = "gpt-3.5-turbo", event = None):
+async def chat(prompt, event = None):
     global preface
     print('preface:', preface)
     try:
         if event is not None:
             await event.message.add_reaction("🤔")
 
+        if '!te' in prompt[:3]:
+            prompt = {'role': 'user', 'content': f'Please translate and explain each part of the following sentence in English: {prompt[3:]}'}
+        elif '!t' in prompt[:2]:
+            prompt = {'role': 'user', 'content': f'Please translate the following sentence in English: {prompt[2:]}'}
+
+
         messages.append({'role': 'user', 'content': prompt})
 
         print(messages)
 
-        completion = openai.ChatCompletion.create(
-            model=chatbot,
-            messages= [{'role': 'system', 'content': preface}] + messages
-        )
-        answer = completion.choices[0].message.content.strip()
+        answer = call_gpt(messages, preface)
 
         messages.append({'role': 'assistant', 'content': answer})
 
@@ -228,10 +230,25 @@ async def chat(prompt, chatbot = "gpt-3.5-turbo", event = None):
         print(e)
         return str(e)
     
+def call_gpt(messages, preface = None):
+    system_preface = [{'role': 'system', 'content': preface}] if preface else []
+    try:
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages= system_preface + messages
+        )
+
+        answer = completion.choices[0].message.content.strip()
+        return answer
+    except Exception as e:
+        print(e)
+        return str(e)
+
+    
 def clear():
-    global prev_messages
+    global messages
     global preface
-    prev_messages = []
+    messages = []
     preface = ""
     return "Cleared message history and preface!"
 
