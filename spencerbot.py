@@ -231,10 +231,10 @@ async def chat(prompt, event = None):
 
         return answer if len(answer) > 0 else "No response"
     except Exception as e:
-        print(e)
+        print(str(e))
         return str(e)
     
-def call_gpt(messages, preface = None):
+def call_gpt(messages, preface = None, errored=False):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     try:
         completion = openai.ChatCompletion.create(
@@ -245,6 +245,9 @@ def call_gpt(messages, preface = None):
         answer = completion.choices[0].message.content.strip()
         return answer
     except Exception as e:
+        if 'Error communicating with OpenAI' in str(e) and not errored:
+            time.sleep(1)
+            return call_gpt(messages, preface, errored=True)
         print(e)
         return str(e)
 
