@@ -143,6 +143,30 @@ def opapi():
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
         \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
     
+def get_tft_scrape(name):
+    url = f"https://lolchess.gg/profile/na/{name.lower()}"
+    print(url)
+    source = requests.get(url, headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
+    }).text
+    
+    return source
+
+def get_tft_json(name):
+    url = f"https://api.tracker.gg/api/v2/tft/standard/profile/riot/{name}?region=NA"
+    text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"}).text
+    source = json.loads(text)
+    return source
+
+def get_tft_stats(name):
+    source = get_tft_scrape(name)
+    soup = BeautifulSoup(source, "html.parser") 
+    div = soup.find("div", {"class": "profile__tier__summary"})
+    tier = div.find("span", {"class": "profile__tier__summary__tier"}).text.strip()
+    lp = div.find("span", {"class": "profile__tier__summary__lp"}).text.strip()
+    rank = div.find("span", {"class": "rank-region"}).text.strip()
+    percent = div.find("span", {"class": "top-percent"}).text.strip()
+    return f'{name} is currently {tier}, {lp} ({rank} | {percent})'
 
 def refresh():
     try:
@@ -297,6 +321,10 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
         elif '!preface' in event.message.content:
             new_preface = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!preface', '').strip()
             await event.message.respond(set_preface(new_preface))
+        elif '!tft' in event.message.content:
+            await event.message.add_reaction("🐧")
+            name = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!tft', '').strip()
+            await event.message.respond(get_tft_stats(name))
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
 

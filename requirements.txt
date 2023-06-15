@@ -1,2 +1,4 @@
 hikari
 beautifulsoup4
+requests
+openai
