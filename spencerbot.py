@@ -159,14 +159,17 @@ def get_tft_json(name):
     return source
 
 def get_tft_stats(name):
-    source = get_tft_scrape(name)
-    soup = BeautifulSoup(source, "html.parser") 
-    div = soup.find("div", {"class": "profile__tier__summary"})
-    tier = div.find("span", {"class": "profile__tier__summary__tier"}).text.strip()
-    lp = div.find("span", {"class": "profile__tier__summary__lp"}).text.strip()
-    rank = div.find("span", {"class": "rank-region"}).text.strip()
-    percent = div.find("span", {"class": "top-percent"}).text.strip()
-    return f'{name} is currently {tier}, {lp} ({rank} | {percent})'
+    try:
+        source = get_tft_scrape(name)
+        soup = BeautifulSoup(source, "html.parser") 
+        div = soup.find("div", {"class": "profile__tier__summary"})
+        tier = div.find("span", {"class": "profile__tier__summary__tier"}).text.strip()
+        lp = div.find("span", {"class": "profile__tier__summary__lp"}).text.strip()
+        rank = div.find("span", {"class": "rank-region"}).text.strip()
+        percent = div.find("span", {"class": "top-percent"}).text.strip()
+        return f'{name} is currently {tier}, {lp} ({rank} | {percent})'
+    except:
+        return f"{name} not found!"
 
 def refresh():
     try:
