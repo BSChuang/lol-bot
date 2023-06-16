@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import asyncio
 import openai
 import pandas as pd
-import math
+from tabulate import tabulate
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -196,12 +196,11 @@ def rank_value(user):
 
 def get_list_tft_stats():
     users_ranks = []
-
-    for user in ['C9_k3soju', 'Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
-        users_ranks.append(get_op_tft_stats(user))
-        users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
     try:
-        return f"```{pd.DataFrame(users_ranks).to_string(index=False)}```"
+        for user in ['C9_k3soju', 'Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
+            users_ranks.append(get_op_tft_stats(user))
+            users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
+        return f"```{tabulate(pd.DataFrame(users_ranks), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'TOP'], showindex=False)}```"
     except:
         return 'Sorry, there was an error. Try again.'
 
@@ -209,7 +208,7 @@ def get_list_tft_stats():
 def get_tft_stats(name):
     try:
         stats = get_op_tft_stats(name)
-        return f"```{pd.DataFrame([stats]).to_string(index=False)}```"
+        return f"```{tabulate(pd.DataFrame([stats]), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'TOP'], showindex=False)}```"
     except:
         return 'Sorry, there was an error. Try again.'
 
