@@ -7,6 +7,8 @@ import configparser
 from datetime import datetime, timedelta
 import asyncio
 import openai
+import pandas as pd
+import math
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -142,34 +144,74 @@ def opapi():
         \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
         \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
-    
-def get_tft_scrape(name):
-    url = f"https://lolchess.gg/profile/na/{name.lower()}"
-    print(url)
+
+def op_tft_refresh(id):
+    try:
+        url = f"https://tft-api.op.gg/api/v1/na/summoners/{id}/renew"
+        res = requests.post(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
+        print("Refreshed")
+        return res
+    except:
+        print("Can't refresh")
+
+def get_op_tft_id(name):
+    url = f"https://tft-api.op.gg/api/v1/na/summoners?name={name}"
     source = requests.get(url, headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
     }).text
-    
-    return source
 
-def get_tft_json(name):
-    url = f"https://api.tracker.gg/api/v2/tft/standard/profile/riot/{name}?region=NA"
-    text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"}).text
-    source = json.loads(text)
-    return source
+    my_json = json.loads(source)
+    return my_json['data']['id']
+
+def get_op_tft_stats(name):
+    id = get_op_tft_id(name)
+    op_tft_refresh(id)
+    url = f"https://tft-api.op.gg/api/v1/na/summoners/{id}"
+    source = requests.get(url, headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
+    }).text
+
+    my_json = json.loads(source)
+    lp = my_json['data']['summoner']['entry']['RANKED_TFT']['leaguePoints']
+    rank = my_json['data']['summoner']['entry']['RANKED_TFT']['rank']
+    tier = my_json['data']['summoner']['entry']['RANKED_TFT']['tier']
+    curr = my_json['data']['ranking']['RANKED_TFT']['current']
+    total = my_json['data']['ranking']['RANKED_TFT']['total']
+    percent = round(curr / total * 100, 3)
+
+    return {
+        'name': name,
+        'tier': tier,
+        'division': rank,
+        'lp': lp,
+        'curr': f'#{curr}',
+        'top': f'{percent}%'
+    }
+
+def rank_value(user):
+    tiers = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER']
+    divisions = ['IV', 'III', 'II', 'I']
+    user_tier, user_division = tiers.index(user['tier']), divisions.index(user['division'])
+    return (user_tier * 5 + user_division) * 100 + int(user['lp'])
+
+def get_list_tft_stats():
+    users_ranks = []
+
+    for user in ['Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
+        users_ranks.append(get_op_tft_stats(user))
+        users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
+    try:
+        return f"```{pd.DataFrame(users_ranks).to_string(index=False)}```"
+    except:
+        return 'Sorry, there was an error. Try again.'
+
 
 def get_tft_stats(name):
     try:
-        source = get_tft_scrape(name)
-        soup = BeautifulSoup(source, "html.parser") 
-        div = soup.find("div", {"class": "profile__tier__summary"})
-        tier = div.find("span", {"class": "profile__tier__summary__tier"}).text.strip()
-        lp = div.find("span", {"class": "profile__tier__summary__lp"}).text.strip()
-        rank = div.find("span", {"class": "rank-region"}).text.strip()
-        percent = div.find("span", {"class": "top-percent"}).text.strip()
-        return f'{name} is currently {tier}, {lp} ({rank} | {percent})'
+        stats = get_op_tft_stats(name)
+        return f"```{pd.DataFrame([stats]).to_string(index=False)}```"
     except:
-        return f"{name} not found!"
+        return 'Sorry, there was an error. Try again.'
 
 def refresh():
     try:
@@ -327,7 +369,11 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
         elif '!tft' in event.message.content:
             await event.message.add_reaction("🐧")
             name = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!tft', '').strip()
-            await event.message.respond(get_tft_stats(name))
+            if name == '':
+                await event.message.respond(get_list_tft_stats())
+            else:
+                await event.message.respond(get_tft_stats(name))
+
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
 
