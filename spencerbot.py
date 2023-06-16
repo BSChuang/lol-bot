@@ -197,7 +197,7 @@ def rank_value(user):
 def get_list_tft_stats():
     users_ranks = []
 
-    for user in ['Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
+    for user in ['C9_k3soju', 'Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
         users_ranks.append(get_op_tft_stats(user))
         users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
     try:
