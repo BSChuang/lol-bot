@@ -9,6 +9,7 @@ import asyncio
 import openai
 import pandas as pd
 from tabulate import tabulate
+import threading
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -166,6 +167,7 @@ def get_op_tft_id(name):
 def get_op_tft_stats(name):
     id = get_op_tft_id(name)
     op_tft_refresh(id)
+    time.sleep(5)
     url = f"https://tft-api.op.gg/api/v1/na/summoners/{id}"
     source = requests.get(url, headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
@@ -196,10 +198,23 @@ def rank_value(user):
 
 def get_list_tft_stats():
     users_ranks = []
+    threads = []
+
+    def add_to_list(user):
+        stats = get_op_tft_stats(user)
+        users_ranks.append(stats)
+
+
     try:
         for user in ['C9_k3soju', 'Aleckzandur', 'Chilshifter', 'Atticus_Fitch', 'mong0lians']:
-            users_ranks.append(get_op_tft_stats(user))
-            users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
+            p = threading.Thread(target=add_to_list, args=(user,))
+            threads.append(p)
+            p.start()
+
+        for process in threads:
+            process.join()
+        
+        users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
         return f"```{tabulate(pd.DataFrame(users_ranks), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'TOP'], showindex=False)}```"
     except:
         return 'Sorry, there was an error. Try again.'
