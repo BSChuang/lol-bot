@@ -10,6 +10,7 @@ import openai
 import pandas as pd
 from tabulate import tabulate
 import threading
+import math
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -146,6 +147,13 @@ def opapi():
         \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
         \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
 
+def get_json(url):
+    source = requests.get(url, headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
+    }).text
+
+    return json.loads(source)
+
 def op_tft_refresh(id):
     try:
         url = f"https://tft-api.op.gg/api/v1/na/summoners/{id}/renew"
@@ -156,38 +164,37 @@ def op_tft_refresh(id):
         print("Can't refresh")
 
 def get_op_tft_id(name):
-    url = f"https://tft-api.op.gg/api/v1/na/summoners?name={name}"
-    source = requests.get(url, headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
-    }).text
-
-    my_json = json.loads(source)
-    return my_json['data']['id']
+    return get_json(f"https://tft-api.op.gg/api/v1/na/summoners?name={name}")['data']['id']
 
 def get_op_tft_stats(name):
     id = get_op_tft_id(name)
     op_tft_refresh(id)
     time.sleep(5)
-    url = f"https://tft-api.op.gg/api/v1/na/summoners/{id}"
-    source = requests.get(url, headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36"
-    }).text
 
-    my_json = json.loads(source)
-    lp = my_json['data']['summoner']['entry']['RANKED_TFT']['leaguePoints']
-    rank = my_json['data']['summoner']['entry']['RANKED_TFT']['rank']
-    tier = my_json['data']['summoner']['entry']['RANKED_TFT']['tier']
-    curr = my_json['data']['ranking']['RANKED_TFT']['current']
-    total = my_json['data']['ranking']['RANKED_TFT']['total']
+    stat_json = get_json(f"https://tft-api.op.gg/api/v1/na/summoners/{id}")
+    lp = stat_json['data']['summoner']['entry']['RANKED_TFT']['leaguePoints']
+    rank = stat_json['data']['summoner']['entry']['RANKED_TFT']['rank']
+    tier = stat_json['data']['summoner']['entry']['RANKED_TFT']['tier']
+    curr = stat_json['data']['ranking']['RANKED_TFT']['current']
+    total = stat_json['data']['ranking']['RANKED_TFT']['total']
     percent = round(curr / total * 100, 3)
+
+    match_json = get_json(f"https://tft-api.op.gg/api/v1/na/summoners/{id}/matches")
+    match_list = match_json['data']
+    placements = [match['summary']['placement'] for match in match_list]
+    avg_placement = round(sum(placements) / len(placements), 3)
+
+
+
 
     return {
         'name': name,
         'tier': tier,
         'division': rank,
         'lp': lp,
-        'curr': f'#{curr}',
-        'top': f'{percent}%'
+        'rank': f'#{curr}',
+        'avg_placement': avg_placement,
+        'percentile': f'{percent}%'
     }
 
 def rank_value(user):
@@ -215,7 +222,7 @@ def get_list_tft_stats():
             process.join()
         
         users_ranks.sort(key=lambda x : rank_value(x), reverse=True)
-        return f"```{tabulate(pd.DataFrame(users_ranks), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'TOP'], showindex=False)}```"
+        return f"```{tabulate(pd.DataFrame(users_ranks), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'Placement', 'Percentile'], showindex=False)}```"
     except:
         return 'Sorry, there was an error. Try again.'
 
@@ -223,7 +230,7 @@ def get_list_tft_stats():
 def get_tft_stats(name):
     try:
         stats = get_op_tft_stats(name)
-        return f"```{tabulate(pd.DataFrame([stats]), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'TOP'], showindex=False)}```"
+        return f"```{tabulate(pd.DataFrame([stats]), headers=['Name', 'Tier', 'Division', 'LP', 'Rank', 'Placement', 'Percentile'], showindex=False)}```"
     except:
         return 'Sorry, there was an error. Try again.'
 
