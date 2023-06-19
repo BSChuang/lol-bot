@@ -169,7 +169,7 @@ def get_op_tft_id(name):
 def get_op_tft_stats(name):
     id = get_op_tft_id(name)
     op_tft_refresh(id)
-    time.sleep(5)
+    time.sleep(8)
 
     stat_json = get_json(f"https://tft-api.op.gg/api/v1/na/summoners/{id}")
     lp = stat_json['data']['summoner']['entry']['RANKED_TFT']['leaguePoints']
@@ -179,13 +179,9 @@ def get_op_tft_stats(name):
     total = stat_json['data']['ranking']['RANKED_TFT']['total']
     percent = round(curr / total * 100, 3)
 
-    match_json = get_json(f"https://tft-api.op.gg/api/v1/na/summoners/{id}/matches")
-    match_list = match_json['data']
-    placements = [match['summary']['placement'] for match in match_list]
-    avg_placement = round(sum(placements) / len(placements), 3)
-
-
-
+    total_matches = stat_json['data']['matchStat']['match']['1100']['total']
+    placements = stat_json['data']['matchStat']['match']['1100']['placement']
+    avg_placement = sum([x * (i+1) for x, i in enumerate(placements)]) / total_matches
 
     return {
         'name': name,
