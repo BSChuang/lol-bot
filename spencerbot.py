@@ -181,7 +181,7 @@ def get_op_tft_stats(name):
 
     total_matches = stat_json['data']['matchStat']['match']['1100']['total']
     placements = stat_json['data']['matchStat']['match']['1100']['placement']
-    avg_placement = sum([x * (i+1) for x, i in enumerate(placements)]) / total_matches
+    avg_placement = sum([x * (i+1) for i, x in enumerate(placements)]) / total_matches
 
     return {
         'name': name,
