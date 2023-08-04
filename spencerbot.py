@@ -11,6 +11,7 @@ import pandas as pd
 from tabulate import tabulate
 import threading
 import math
+from llama import ask_llama
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -390,7 +391,12 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
                 await event.message.respond(get_list_tft_stats())
             else:
                 await event.message.respond(get_tft_stats(name))
+        elif '!w' in event.message.content:
+            await event.message.add_reaction("🧙")
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!w', '').strip()
 
+            res = ask_llama(prompt)
+            await event.message.respond(res)
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
 
