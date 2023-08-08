@@ -292,7 +292,7 @@ async def chat(prompt, event = None, gpt4 = False):
     print('preface:', preface)
     try:
         if event is not None:
-            await event.message.add_reaction("🤔")
+            await event.message.add_reaction("👌" if gpt4 else "🤔")
 
         if '!te' in prompt[:3]:
             prompt = f"Please translate the following sentence(s) and explain the in-depth grammar of each word in English: {prompt[3:]}"
