@@ -287,7 +287,7 @@ async def relapse(event):
 
 messages = []
 preface = ""
-async def chat(prompt, event = None):
+async def chat(prompt, event = None, gpt4 = False):
     global preface
     print('preface:', preface)
     try:
@@ -304,7 +304,7 @@ async def chat(prompt, event = None):
 
         print(messages)
 
-        answer = call_gpt(messages, preface)
+        answer = call_gpt(messages, preface, gpt4)
 
         messages.append({'role': 'assistant', 'content': answer})
 
@@ -321,11 +321,11 @@ async def chat(prompt, event = None):
         print(str(e))
         return str(e)
     
-def call_gpt(messages, preface = None, errored=False):
+def call_gpt(messages, preface = None, errored=False, gpt4 = False):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     try:
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4" if gpt4 else "gpt-3.5-turbo",
             messages= system_preface + messages
         )
 
@@ -334,7 +334,7 @@ def call_gpt(messages, preface = None, errored=False):
     except Exception as e:
         if 'Error communicating with OpenAI' in str(e) and not errored:
             time.sleep(1)
-            return call_gpt(messages, preface, errored=True)
+            return call_gpt(messages, preface, errored=True, gpt4=gpt4)
         print(e)
         return str(e)
 
@@ -396,6 +396,14 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!w', '').strip()
 
             res = ask_llama(prompt)
+            await event.message.respond(res)
+        elif '!4' in event.message.content:
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!4', '').strip()
+
+            res = await chat(prompt, event=event, gpt4=True)
+            while len(res) > 1900:
+                await event.message.respond(res[:1900])
+                res = res[1900:]
             await event.message.respond(res)
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
