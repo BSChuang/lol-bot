@@ -4,3 +4,4 @@ requests
 openai
 pandas
 tabulate
+matplotlib

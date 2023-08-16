@@ -12,6 +12,7 @@ from tabulate import tabulate
 import threading
 import math
 from llama import ask_llama
+from weight_helper import calories, weight
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -405,6 +406,18 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
                 await event.message.respond(res[:1900])
                 res = res[1900:]
             await event.message.respond(res)
+        elif '!c' in event.message.content:
+            await event.message.add_reaction("🥩")
+            num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip()
+
+            res = calories(num if num != '' else None)
+            await event.message.respond(res)
+        elif '!lb' in event.message.content:
+            await event.message.add_reaction("🏋️")
+            num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!lb', '').strip()
+
+            res = weight(num if num != '' else None)
+            await event.message.respond(res) 
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
 
@@ -449,5 +462,5 @@ async def check_for_new_game():
 
 if __name__ == "__main__":
     print(datetime.now())
-    asyncio.get_event_loop().create_task(check_for_new_game())
+    # asyncio.get_event_loop().create_task(check_for_new_game())
     bot.run()
