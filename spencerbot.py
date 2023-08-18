@@ -416,7 +416,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             await event.message.add_reaction("🏋️")
             num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!lb', '').strip()
 
-            res = weight(num if num != '' else None)
+            res = weight(num if num != '' else None, event.message.author.id)
             await event.message.respond(res) 
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()

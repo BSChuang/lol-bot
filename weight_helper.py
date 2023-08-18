@@ -12,13 +12,27 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import hikari
+import math
+import os
+
+def is_valid(num, min_range, max_range):
+    try:
+        float_num = float(num)
+        return math.isfinite(float_num) and not math.isnan(float_num) and min_range < float_num < max_range
+    except:
+        return False
+
 
 def calories(num):
+    if not os.path.isfile('./calories.csv'):
+        calories_df = pd.DataFrame(columns=['timestamp', 'calories'])
+        calories_df.to_csv('./calories.csv', index=False)
+
     try:
         df = pd.read_csv('./calories.csv')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         
-        if num is not None:
+        if num is not None and is_valid(num, 0, 5000):
             df.loc[len(df)] = [pd.Timestamp.now(), float(num)]
         
         df.to_csv('./calories.csv', index=False)
@@ -28,16 +42,20 @@ def calories(num):
     except:
         return "Something went wrong"
     
-def weight(num):
+def weight(num, user_id):
+    if not os.path.isfile(f'./weight_graphs/weight_{user_id}.csv'):
+        calories_df = pd.DataFrame(columns=['timestamp', 'weight'])
+        calories_df.to_csv(f'./weight_graphs/weight_{user_id}.csv', index=False)
+
     try:
-        df = pd.read_csv('./weight.csv')
+        df = pd.read_csv(f'./weight_graphs/weight_{user_id}.csv')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         
-        if num is not None:
+        if num is not None and is_valid(num, 0, 300):
             df.loc[len(df)] = [pd.Timestamp.now(), float(num)]
-            df.to_csv('./weight.csv', index=False)
+            df.to_csv(f'./weight_graphs/weight_{user_id}.csv', index=False)
             
-        df.plot(x='timestamp', y='weight', kind='line').set_ylim(bottom=0)
+        df.plot(x='timestamp', y='weight', kind='line', grid=True, legend=False).set_ylim(bottom=0, top=max(df['weight'])*1.25)
         plt.savefig('weight_graph.png', dpi=300)
         f = hikari.File('./weight_graph.png')
         return f
