@@ -13,7 +13,7 @@ config.read("config.ini")
 
 BASE_URL = 'https://bschuang-modelscope-text-to-video-synthesis.hf.space'
 BEARER = config['discord']['hf_token']
-FRAME_COUNT = 50
+FPS = 8
 
 def get_gif(prompt):
     try:
@@ -67,7 +67,7 @@ def make_gif(frame_folder):
     frames = [Image.open(image) for image in images]
     frame_one = frames[0]
     frame_one.save("temp.gif", format="GIF", append_images=frames,
-                   save_all=True, duration=FRAME_COUNT, loop=0)
+                   save_all=True, duration=FPS, loop=0)
     
 if __name__ == "__main__":
     get_gif("times square at night.")
