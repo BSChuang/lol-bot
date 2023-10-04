@@ -13,6 +13,7 @@ import threading
 import math
 from llama import ask_llama
 from weight_helper import calories, weight
+from huggingface import get_gif
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -417,6 +418,12 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!lb', '').strip()
 
             res = weight(num if num != '' else None, event.message.author.id)
+            await event.message.respond(res) 
+        elif '!g' in event.message.content:
+            await event.message.add_reaction("👀")
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!g', '').strip()
+
+            res = get_gif(prompt)
             await event.message.respond(res) 
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()

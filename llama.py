@@ -5,7 +5,7 @@ import json
 def ask_llama(prompt):
     api_url = "http://localhost:11434/api/generate"
     body = {
-        'model': 'wizard-vicuna',
+        'model': 'llama2-uncensored',
         'prompt': prompt
     }
 

@@ -54,7 +54,7 @@ def weight(num, user_id):
         if num is not None and is_valid(num, 0, 300):
             df.loc[len(df)] = [pd.Timestamp.now(), float(num)]
             df.to_csv(f'./weight_graphs/weight_{user_id}.csv', index=False)
-            
+
         df.plot(x='timestamp', y='weight', kind='line', grid=True, legend=False).set_ylim(bottom=min(df['weight'])-10, top=max(df['weight'])+10)
         plt.savefig('weight_graph.png', dpi=300)
         f = hikari.File('./weight_graph.png')

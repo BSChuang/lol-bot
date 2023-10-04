@@ -5,3 +5,7 @@ openai
 pandas
 tabulate
 matplotlib
+diffusers
+transformers
+accelerate
+torch
