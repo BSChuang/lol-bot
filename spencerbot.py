@@ -14,6 +14,7 @@ import math
 from llama import ask_llama
 from weight_helper import calories, weight
 from huggingface import get_gif
+import urllib.request
 
 # Replace YOUR_API_KEY with your OpenAI API key
 
@@ -356,6 +357,22 @@ def set_preface(new_preface):
         preface = new_preface + '\n'
     return "Preface set!"
 
+def get_image(prompt):
+    try:
+        response = openai.Image.create(
+            prompt=prompt,
+            n=1,
+            size="512x512"
+        )
+        image_url = response['data'][0]['url']
+        urllib.request.urlretrieve(image_url, "temp.png")
+        f = hikari.File('./temp.png')
+        return f
+    except openai.error.OpenAIError as e:
+        print(e.http_status)
+        print(e.error)
+        return e
+
 latest_event = None
 
 @bot.listen()
@@ -425,6 +442,12 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
 
             res = get_gif(prompt)
             await event.message.respond(res) 
+        elif '!i' in event.message.content:
+            await event.message.add_reaction("📷")
+            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
+
+            res = get_image(prompt)
+            await event.message.respond(res)
         else:
             prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
 
