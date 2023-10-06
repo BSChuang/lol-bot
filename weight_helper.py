@@ -62,9 +62,10 @@ def weight(num, user_id):
         plt.ylabel("Weight")
         plt.minorticks_on()
         plt.grid(which='both')
-        plt.grid(which='minor', color='#CCCCCC', linestyle=':', linewidth=0.5)
+        plt.grid(which='minor', color='#AAAAAA', linestyle=':', linewidth=0.5)
+        plt.xticks(rotation=30, fontsize = 'xx-small')
         plt.savefig('weight_graph.png', dpi=300)
-        
+
         f = hikari.File('./weight_graph.png')
         return f
     except Exception as e:
