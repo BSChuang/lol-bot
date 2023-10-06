@@ -7,6 +7,7 @@ import os
 import pathlib
 import shutil
 import hikari
+import urllib
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -15,12 +16,13 @@ BASE_URL = 'https://bschuang-modelscope-text-to-video-synthesis.hf.space'
 BEARER = config['discord']['hf_token']
 FPS = 156
 
-def get_gif(prompt):
+
+def get_media(prompt, endpoint):
     try:
-        video_path = None
+        data = None
         for i in range(5):
             print(f"attempt {i}")
-            response = requests.post(f"{BASE_URL}/run/predict", headers={
+            response = requests.post(f"{BASE_URL}/run/{endpoint}", headers={
                 "Authorization": f"Bearer {BEARER}"
             }, json={
                 "data": [
@@ -29,28 +31,39 @@ def get_gif(prompt):
             })
 
             if response.status_code == 200:
-                video_path = response.json()['data'][0]['name']
+                if endpoint == 'predict':
+                    data = response.json()['data'][0]['name']
+                else:
+                    data = response.json()['data'][0]
                 break
 
-        if video_path == None:
-            return "Failed to generate gif."
+        if data == None:
+            return "Failed to generate."
 
-        response = requests.get(f"{BASE_URL}/file={video_path}", headers={
-            "Authorization": f"Bearer {BEARER}"
-        })
-        f=open("temp.mp4", 'wb')
-        for chunk in response.iter_content(chunk_size=255): 
-            if chunk: # filter out keep-alive new chunks
-                f.write(chunk)
-        f.close()
+        
+        if endpoint == 'predict':
+            response = requests.get(f"{BASE_URL}/file={data}", headers={
+                "Authorization": f"Bearer {BEARER}"
+            })
+            f = open("temp.mp4", 'wb')
+            for chunk in response.iter_content(chunk_size=255): 
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+            f.close()
 
-        convert_mp4_to_jpgs("./temp.mp4")
-        os.remove('./temp.mp4')
-        make_gif("output")
-        shutil.rmtree(pathlib.Path('./output'))
+            convert_mp4_to_jpgs("./temp.mp4")
+            os.remove('./temp.mp4')
+            make_gif("output")
+            shutil.rmtree(pathlib.Path('./output'))
 
-        f = hikari.File('./temp.gif')
-        return f
+            result = hikari.File('./temp.gif')
+        else:
+            image = urllib.request.urlopen(data)
+            with open('temp.png', 'wb') as f:
+                f.write(image.file.read())
+            result = hikari.File('./temp.png')
+        
+        return result
     except Exception as e:
         print(e)
         return e
@@ -78,5 +91,6 @@ def make_gif(frame_folder):
                    save_all=True, duration=FPS, loop=0)
     
 if __name__ == "__main__":
-    get_gif("times square at night.")
+    # get_gif("times square at night.")
+    get_media("a squirrel", 'predict_1')
     # convert_mp4_to_jpgs("./temp.mp4")
