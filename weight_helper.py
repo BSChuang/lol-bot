@@ -55,21 +55,27 @@ def weight(num, user_id):
             df.loc[len(df)] = [pd.Timestamp.now(), float(num)]
             df.to_csv(f'./weight_graphs/weight_{user_id}.csv', index=False)
 
-        df.plot(x='timestamp', y='weight', kind='line', grid=True, legend=False).set_ylim(bottom=min(df['weight'])-10, top=max(df['weight'])+10)
+        df['rolling'] = df['weight'].rolling(7, min_periods=1, center=False).mean()
+
+        plt.plot(df['timestamp'], df[['weight', 'rolling']])
+        plt.xlabel("Date")
+        plt.ylabel("Weight")
+        plt.minorticks_on()
+        plt.grid(which='both')
+        plt.grid(which='minor', color='#CCCCCC', linestyle=':', linewidth=0.5)
         plt.savefig('weight_graph.png', dpi=300)
+        
         f = hikari.File('./weight_graph.png')
         return f
-    except:
+    except Exception as e:
+        print(e)
         return "Something went wrong"
 
 
 def init():
     calories_df = pd.DataFrame(columns=['timestamp', 'calories'])
-    weight_df = pd.DataFrame(columns=['timestamp', 'weight'])
-
     calories_df.to_csv('./calories.csv', index=False)
-    weight_df.to_csv('./weight.csv', index=False)
 
 
 if __name__ == "__main__":
-    init()
+    weight(None, 374970992419799042)

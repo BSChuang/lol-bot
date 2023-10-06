@@ -17,15 +17,23 @@ FPS = 8
 
 def get_gif(prompt):
     try:
-        response = requests.post(f"{BASE_URL}/run/predict", headers={
-            "Authorization": f"Bearer {BEARER}"
-        }, json={
-            "data": [
-                prompt,
-            ]
-        })
+        video_path = None
+        for i in range(5):
+            print(f"attempt {i}")
+            response = requests.post(f"{BASE_URL}/run/predict", headers={
+                "Authorization": f"Bearer {BEARER}"
+            }, json={
+                "data": [
+                    prompt,
+                ]
+            })
 
-        video_path = response.json()['data'][0]['name']
+            if response.status_code == 200:
+                video_path = response.json()['data'][0]['name']
+                break
+
+        if video_path == None:
+            return "Failed to generate gif."
 
         response = requests.get(f"{BASE_URL}/file={video_path}", headers={
             "Authorization": f"Bearer {BEARER}"
