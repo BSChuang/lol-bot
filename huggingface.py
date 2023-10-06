@@ -13,7 +13,7 @@ config.read("config.ini")
 
 BASE_URL = 'https://bschuang-modelscope-text-to-video-synthesis.hf.space'
 BEARER = config['discord']['hf_token']
-FPS = 8
+FPS = 156
 
 def get_gif(prompt):
     try:
