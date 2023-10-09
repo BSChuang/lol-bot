@@ -65,6 +65,7 @@ def weight(num, user_id):
         plt.grid(which='minor', color='#AAAAAA', linestyle=':', linewidth=0.5)
         plt.xticks(rotation=30, fontsize = 'xx-small')
         plt.savefig('weight_graph.png', dpi=300)
+        plt.clf()
 
         f = hikari.File('./weight_graph.png')
         return f

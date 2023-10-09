@@ -20,7 +20,7 @@ FPS = 156
 def get_media(prompt, endpoint):
     try:
         data = None
-        for i in range(5):
+        for i in range(8):
             print(f"attempt {i}")
             response = requests.post(f"{BASE_URL}/run/{endpoint}", headers={
                 "Authorization": f"Bearer {BEARER}"
