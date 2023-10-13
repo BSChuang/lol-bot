@@ -66,6 +66,7 @@ def calories(body: str):
 def remove_latest():
     try:
         df = pd.read_csv('./calories.csv')
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
         df.drop(df.tail(1).index, inplace=True)
         df.to_csv('./calories.csv', index=False)
         
