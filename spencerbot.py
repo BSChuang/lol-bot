@@ -1,3 +1,4 @@
+from calorieninja import get_calories
 import requests
 import random
 import json
@@ -10,9 +11,8 @@ import openai
 import pandas as pd
 from tabulate import tabulate
 import threading
-import math
 from llama import ask_llama
-from weight_helper import calories, remove_latest, set_food, weight
+from weight_helper import calories, remove_latest, weight
 from huggingface import get_media
 import urllib.request
 
@@ -432,11 +432,22 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
 
             res = calories(body)
             await event.message.respond(res)
+        elif '!q' in event.message.content:
+            await event.message.add_reaction("🥩")
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!q', '').strip().lower()
+
+            body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
+
+            print(body_serving)
+
+            res = calories(body_serving)
+            await event.message.respond(res)
         elif '!s' in event.message.content:
             await event.message.add_reaction("🥩")
             body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!s', '').strip().lower()
 
-            res = set_food(body)
+            items = get_calories(body)
+            res = '\n'.join([str(item) for item in items])
             await event.message.respond(res)
         elif '!r' in event.message.content:
             await event.message.add_reaction("🥩")

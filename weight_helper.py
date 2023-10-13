@@ -8,13 +8,12 @@
     !lb: prints graph of weight
 '''
 
+from calorieninja import get_calories
 import pandas as pd
-from datetime import datetime
 import matplotlib.pyplot as plt
 import hikari
 import math
 import os
-import json
 
 def is_valid(num, min_range, max_range):
     try:
@@ -28,23 +27,16 @@ def calories(body: str):
     if not os.path.isfile('./calories.csv'):
         calories_df = pd.DataFrame(columns=['timestamp', 'calories'])
         calories_df.to_csv('./calories.csv', index=False)
-    if not os.path.isfile('./foods.json'):
-        save_json({}, 'foods.json')
 
     try:
-        if body != '':
-            if body.isdigit():
-                calorie = int(body)
-            else:
-                count, food = body.split(' ', 1)
-                count = int(count)
-                foods = load_json('foods.json')
-                if food in foods:
-                    calorie = count * foods[food]
-                else:
-                    return f'Food not found!'
-        else:
+        items = None
+        if body == '':
             calorie = None
+        elif body.isdigit():
+            calorie = float(body)
+        else:
+            items = get_calories(body)
+            calorie = sum([x['calories'] for x in items])
 
         print(calorie)
 
@@ -53,12 +45,17 @@ def calories(body: str):
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         
         if calorie is not None and is_valid(calorie, 0, 5000):
-            df.loc[len(df)] = [pd.Timestamp.now(), int(calorie)]
+            df.loc[len(df)] = [pd.Timestamp.now(), float(calorie)]
         
         df.to_csv('./calories.csv', index=False)
         
         day_calories = df.groupby(df['timestamp'].dt.date)['calories'].sum().tail(1).item()
-        return f'Total calories for the day: {day_calories}'
+
+
+        calories_str = f'Added {calorie} calories' if calorie is not None else ''
+        items_str = '\n'.join([str(item) for item in items]) if items else ''
+ 
+        return items_str + f'\n\n{calories_str}\nTotal calories for the day: {round(day_calories)}'
     except Exception as e:
         print(e)
         return f"Something went wrong: {e}"
@@ -71,30 +68,10 @@ def remove_latest():
         df.to_csv('./calories.csv', index=False)
         
         day_calories = df.groupby(df['timestamp'].dt.date)['calories'].sum().tail(1).item()
-        return f'Total calories for the day: {day_calories}'
+        return f'Total calories for the day: {round(day_calories)}'
     except Exception as e:
         print(e)
         return f"Something went wrong: {e}"
-    
-def load_json(file_str) -> dict:
-    with open(file_str) as json_file:
-        dictionary = json.load(json_file)
-        return dictionary
-
-def save_json(dictionary, file_str):
-    with open(file_str, 'w') as json_file:
-        json.dump(dictionary, json_file)
-    
-def set_food(body: str):
-    if not os.path.isfile('./foods.json'):
-        save_json({}, 'foods.json')
-
-    calorie, food = body.split(' ', 1)
-    foods = load_json('foods.json')
-    foods[food] = int(calorie)
-    save_json(foods, 'foods.json')
-
-    return f'Set {food} to {calorie} calories'
     
 def weight(num, user_id):
     if not os.path.isfile(f'./weight_graphs/weight_{user_id}.csv'):
