@@ -39,7 +39,6 @@ def get_media(prompt, endpoint):
 
         if data == None:
             return "Failed to generate."
-
         
         if endpoint == 'predict':
             response = requests.get(f"{BASE_URL}/file={data}", headers={

@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import hikari
 import math
 import os
+import json
 
 def is_valid(num, min_range, max_range):
     try:
@@ -23,24 +24,76 @@ def is_valid(num, min_range, max_range):
         return False
 
 
-def calories(num):
+def calories(body: str):
     if not os.path.isfile('./calories.csv'):
         calories_df = pd.DataFrame(columns=['timestamp', 'calories'])
         calories_df.to_csv('./calories.csv', index=False)
+    if not os.path.isfile('./foods.json'):
+        save_json({}, 'foods.json')
 
     try:
+        if body != '':
+            if body.isdigit():
+                calorie = int(body)
+            else:
+                count, food = body.split(' ', 1)
+                count = int(count)
+                foods = load_json('foods.json')
+                if food in foods:
+                    calorie = count * foods[food]
+                else:
+                    return f'Food not found!'
+        else:
+            calorie = None
+
+        print(calorie)
+
+
         df = pd.read_csv('./calories.csv')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         
-        if num is not None and is_valid(num, 0, 5000):
-            df.loc[len(df)] = [pd.Timestamp.now(), float(num)]
+        if calorie is not None and is_valid(calorie, 0, 5000):
+            df.loc[len(df)] = [pd.Timestamp.now(), int(calorie)]
         
         df.to_csv('./calories.csv', index=False)
         
         day_calories = df.groupby(df['timestamp'].dt.date)['calories'].sum().tail(1).item()
         return f'Total calories for the day: {day_calories}'
-    except:
-        return "Something went wrong"
+    except Exception as e:
+        print(e)
+        return f"Something went wrong: {e}"
+    
+def remove_latest():
+    try:
+        df = pd.read_csv('./calories.csv')
+        df.drop(df.tail(1).index, inplace=True)
+        df.to_csv('./calories.csv', index=False)
+        
+        day_calories = df.groupby(df['timestamp'].dt.date)['calories'].sum().tail(1).item()
+        return f'Total calories for the day: {day_calories}'
+    except Exception as e:
+        print(e)
+        return f"Something went wrong: {e}"
+    
+def load_json(file_str) -> dict:
+    with open(file_str) as json_file:
+        dictionary = json.load(json_file)
+        return dictionary
+
+def save_json(dictionary, file_str):
+    with open(file_str, 'w') as json_file:
+        json.dump(dictionary, json_file)
+    
+def set_food(body: str):
+    if not os.path.isfile('./foods.json'):
+        save_json({}, 'foods.json')
+
+    calorie, food = body.split(' ', 1)
+    foods = load_json('foods.json')
+    foods[food] = int(calorie)
+    save_json(foods, 'foods.json')
+
+    return f'Set {food} to {calorie} calories'
     
 def weight(num, user_id):
     if not os.path.isfile(f'./weight_graphs/weight_{user_id}.csv'):

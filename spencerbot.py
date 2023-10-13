@@ -12,7 +12,7 @@ from tabulate import tabulate
 import threading
 import math
 from llama import ask_llama
-from weight_helper import calories, weight
+from weight_helper import calories, remove_latest, set_food, weight
 from huggingface import get_media
 import urllib.request
 
@@ -428,9 +428,19 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
             await event.message.respond(res)
         elif '!c' in event.message.content:
             await event.message.add_reaction("🥩")
-            num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip()
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip().lower()
 
-            res = calories(num if num != '' else None)
+            res = calories(body)
+            await event.message.respond(res)
+        elif '!s' in event.message.content:
+            await event.message.add_reaction("🥩")
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!s', '').strip().lower()
+
+            res = set_food(body)
+            await event.message.respond(res)
+        elif '!r' in event.message.content:
+            await event.message.add_reaction("🥩")
+            res = remove_latest()
             await event.message.respond(res)
         elif '!lb' in event.message.content:
             await event.message.add_reaction("🏋️")
