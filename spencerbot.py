@@ -12,7 +12,7 @@ import pandas as pd
 from tabulate import tabulate
 import threading
 from llama import ask_llama
-from weight_helper import calories, remove_latest, weight
+from weight_helper import see_calories, track_calories, remove_latest, weight
 from huggingface import get_media
 import urllib.request
 
@@ -426,11 +426,22 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
                 await event.message.respond(res[:1900])
                 res = res[1900:]
             await event.message.respond(res)
-        elif '!c' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip().lower()
 
-            res = calories(body)
+        elif '!qt' in event.message.content:
+            await event.message.add_reaction("🥩")
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!qt', '').strip().lower()
+
+            body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
+
+            print(body_serving)
+
+            res = track_calories(body_serving)
+            await event.message.respond(res)
+        elif '!ct' in event.message.content:
+            await event.message.add_reaction("🥩")
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!ct', '').strip().lower()
+
+            res = track_calories(body)
             await event.message.respond(res)
         elif '!q' in event.message.content:
             await event.message.add_reaction("🥩")
@@ -440,7 +451,13 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
 
             print(body_serving)
 
-            res = calories(body_serving)
+            res = see_calories(body_serving)
+            await event.message.respond(res)
+        elif '!c' in event.message.content:
+            await event.message.add_reaction("🥩")
+            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip().lower()
+
+            res = see_calories(body)
             await event.message.respond(res)
         elif '!s' in event.message.content:
             await event.message.add_reaction("🥩")

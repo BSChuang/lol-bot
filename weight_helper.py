@@ -22,8 +22,14 @@ def is_valid(num, min_range, max_range):
     except:
         return False
 
+def see_calories(body: str):
+    items = get_calories(body)
+    calorie = sum([x['calories'] for x in items])
+    items_str = '\n'.join([str(item) for item in items]) if items else ''
+    return f'{items_str}\n\nTotal calories: {calorie}'
 
-def calories(body: str):
+
+def track_calories(body: str):
     if not os.path.isfile('./calories.csv'):
         calories_df = pd.DataFrame(columns=['timestamp', 'calories'])
         calories_df.to_csv('./calories.csv', index=False)
