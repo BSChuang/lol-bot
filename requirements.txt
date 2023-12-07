@@ -1,12 +1,7 @@
-hikari
-beautifulsoup4
 requests
 openai
 pandas
 tabulate
 matplotlib
-diffusers
-transformers
-accelerate
-torch
 opencv-python
+discord.py[voice]

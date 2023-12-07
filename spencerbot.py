@@ -1,41 +1,33 @@
+from dapi import command, leave, speak
 from calorieninja import get_calories
 import requests
 import random
 import json
-import re
 import time
 import configparser
 from datetime import datetime, timedelta
-import asyncio
-import openai
+from openai import OpenAI
 import pandas as pd
 from tabulate import tabulate
 import threading
 from llama import ask_llama
 from weight_helper import see_calories, track_calories, remove_latest, weight
 from huggingface import get_media
-import urllib.request
-
-# Replace YOUR_API_KEY with your OpenAI API key
-
-from bs4 import BeautifulSoup
-import hikari
+import discord
+from discord.ext import commands
+from oai import tts
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-bot = hikari.GatewayBot(token=config['discord']['token'])
-openai.api_key = config['discord']['openai_key']
+openai_client = OpenAI(api_key=config['discord']['openai_key'])
 
-items_json = None
-with open("items.json") as file:
-    file = open("items.json")
-    items_json = json.load(file)
-    file.close()
+intents = discord.Intents.all()
 
-items_dict = {}
-for d in items_json:
-    items_dict[d['id']] = d['name']
+client = discord.Client(intents=intents)
+
+bot = commands.Bot(command_prefix='!', intents=intents)
+
 
 def tier_to_roman(tier):
     tier_to_roman = {
@@ -45,23 +37,6 @@ def tier_to_roman(tier):
         '4': 'IV'
     }
     return tier_to_roman[tier]
-
-def place(num):
-    suffix = {
-        1: 'st',
-        2: 'nd',
-        3: 'rd',
-    }
-    if num in suffix:
-        return suffix[num]
-    else:
-        return 'th'
-    
-def item_id_to_list(list):
-    if 0 in list:
-        list = list[:list.index(0)]
-    items = [items_dict[x] for x in list]
-    return ', '.join(items)
 
 def td_format(td_object):
     seconds = int(td_object.total_seconds())
@@ -88,68 +63,12 @@ def get_most_champions_json():
     text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
     source = json.loads(text)
     return source
-
-def web_scrape():
-    try:
-        url = "https://www.op.gg/summoners/na/The%20NMEs%20Support"
-        source = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
-
-        soup = BeautifulSoup(source, "html.parser")
-        rank_div = soup.find("div", {"class": "css-1v663t e1x14w4w1"})
-        tier = rank_div.find("div", {"class": "tier"}).text
-        lp = rank_div.find("div", {"class": "lp"}).text
-
-        # champ_div = soup.find_all("div", {"class": "champion-box"})
-        # percentage = "NaN"
-        # count = "NaN"
-        # for div in champ_div:
-        #     if div.find("a", {"href": "/champions/sion"}) is not None:
-        #         percentage = div.find("div", {"class": {"css-b0uosc e1g7spwk0"}}).text
-        #         count = div.find("div", {"class": {"count"}}).text.split()[0]
-
-        most_champ_json = get_most_champions_json()
-        play, win, secs = 0, 0, 0
-        for champ in most_champ_json['data']['champion_stats']:
-            if champ['id'] == 14:
-                play, win, secs = champ['play'], champ['win'], champ['game_length_second']
-
-        return f"Bencer is currently {tier[:-2]} {tier_to_roman(tier[-1])}, {lp} with a Sion winrate of {round(win / play * 100)}% over {play} games ({td_format(timedelta(seconds=secs))})"
-    except Exception as e:
-        return str(e)
     
 def get_game_json():
     url = "https://op.gg/api/v1.0/internal/bypass/games/na/summoners/mGQycLPH483CDFWmBqEVRPFCBurCtpQOfLPlhYd3mzKsR6Q?&limit=20&hl=en_US&game_type=total"
     text = requests.get(url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).text
     source = json.loads(text)
     return source
-
-def opapi():
-    source = get_game_json()
-
-    game_list = source['data']
-
-    my_player = None
-    my_game = None
-    for game in game_list:
-        if game['queue_info']['game_type'] == 'SOLORANKED' and game['myData']['champion_id'] == 14:
-            my_game = game
-            my_player = game['myData']
-            break
-            
-    if my_player is None:
-        return "No solo/duo Sion found in past 20 games"
-    
-    start_time_str = my_game['created_at']
-    #duration = my_game['game_length_second']
-    end_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=14)# + timedelta(seconds=duration)
-
-    # Return OP Score, KDA, Damage, Wards, CS, Items
-    stats = my_player['stats']
-    return f"```Last Sion game @ {end_time.strftime('%m/%d/%Y, %H:%M:%S')} EST:\nResult: {stats['result']}\nGame Duration: {td_format(timedelta(seconds=int(my_game['game_length_second'])))}\
-        \nOP Score: {str(stats['op_score_rank'])}{place(stats['op_score_rank'])}\
-        \nKDA: {stats['kill']}/{stats['death']}/{stats['assist']}\
-        \nDamage Done/Taken/Mitigated: {stats['total_damage_dealt_to_champions']}/{stats['total_damage_taken']}/{stats['damage_self_mitigated']}\nTotal Heal: {stats['total_heal']}\
-        \nWard Placed: {stats['ward_place']}\nMinion CS: {stats['minion_kill']}\nItems: {item_id_to_list(my_player['items'])}```"
 
 def get_json(url):
     source = requests.get(url, headers = {
@@ -242,20 +161,6 @@ def refresh():
         return res
     except:
         print("Can't refresh")
-
-
-def fact():
-    animal_list = ["bird", "cat", "dog", "fox", "kangaroo", "koala", "panda", "raccoon", "red_panda"]
-    animal = random.choice(animal_list)
-    try:
-        r = requests.get("https://some-random-api.ml/animal/" + animal)
-        fact = json.loads(r.text)['fact']
-
-        compiled = re.compile(animal, re.IGNORECASE)
-        res = compiled.sub("Spencer", fact)
-        return res
-    except Exception as e:
-        return str(e)
     
 def read(filename):
     with open(filename, 'r') as file:
@@ -273,30 +178,26 @@ def write_dominos():
     write('dominos.txt', str(datetime.timestamp(datetime.now())))
 
 
-
-async def dominos(event):
+async def dominos():
     last_dominos_time = read_dominos()
     secs = (datetime.timestamp(datetime.now()) - last_dominos_time)
     result = td_format(timedelta(seconds = secs))
-    await event.message.respond(f"Last Dominos was {result} ago")
+    return f"Last Dominos was {result} ago"
 
-async def relapse(event):
+async def relapse():
     write_dominos()
     
     emote = random.choice(['<:sadspencer:976908811904385104>', '<:spencer:968679218550550569>', '<:spencer2:972178114941714492>',\
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
-    await event.message.respond(emote)
+    return emote
 
 
 messages = []
 preface = ""
-async def chat(prompt, event = None, gpt4 = False):
+async def chat(prompt, gpt4 = False):
     global preface
     print('preface:', preface)
     try:
-        if event is not None:
-            await event.message.add_reaction("👌" if gpt4 else "🤔")
-
         if '!te' in prompt[:3]:
             prompt = f"Please translate the following sentence(s) and explain the in-depth grammar of each word in English: {prompt[3:]}"
         elif '!t' in prompt[:2]:
@@ -327,7 +228,7 @@ async def chat(prompt, event = None, gpt4 = False):
 def call_gpt(messages, preface = None, errored=False, gpt4 = False):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     try:
-        completion = openai.ChatCompletion.create(
+        completion = openai_client.chat.completions.create(
             model="gpt-4" if gpt4 else "gpt-3.5-turbo",
             messages= system_preface + messages
         )
@@ -357,180 +258,105 @@ def set_preface(new_preface):
         preface = new_preface + '\n'
     return "Preface set!"
 
-
-# OPENAI DALLE
-def get_image(prompt):
-    try:
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,
-            size="512x512"
-        )
-        image_url = response['data'][0]['url']
-        urllib.request.urlretrieve(image_url, "temp.png")
-        f = hikari.File('./temp.png')
-        return f
-    except openai.error.OpenAIError as e:
-        print(e.http_status)
-        print(e.error)
-        return e
-
-latest_event = None
-
-@bot.listen()
-async def ping(event: hikari.GuildMessageCreateEvent) -> None:
-    global latest_event
-
-    # Do not respond to bots nor webhooks pinging us, only user accounts
-    if not event.is_human:
+@bot.event
+async def on_message(message):
+    ctx = await bot.get_context(message)
+    bot_id = '<@1064717164579393577>'
+    if message.author == client.user or not message.content.startswith(bot_id):
         return
 
-    me = bot.get_me()
+    text = message.content.lstrip(bot_id + ' ').strip()
+    if ' ' in text:
+        input_cmd, input_text = text.split(' ', 1)
+    else:
+        input_cmd, input_text = text, None
 
-    if me.id in event.message.user_mentions_ids:
-        print(event.message.content)
-        if '!dominos' in event.message.content:
-            await dominos(event)
-        elif '!relapse' in event.message.content:
-            await relapse(event)
-        elif '!sion' in event.message.content:
-            latest_event = event
-            await event.message.respond(fact())
-            refresh()
-            time.sleep(3)
-            await event.message.respond(web_scrape())
-            await event.message.respond(opapi())
-        elif '!clear' in event.message.content:
-            await event.message.respond(clear())
-        elif '!preface' in event.message.content:
-            new_preface = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!preface', '').strip()
-            await event.message.respond(set_preface(new_preface))
-        elif '!tft' in event.message.content:
-            await event.message.add_reaction("🐧")
-            name = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!tft', '').strip()
-            if name == '':
-                await event.message.respond(get_list_tft_stats())
-            else:
-                await event.message.respond(get_tft_stats(name))
-        elif '!w' in event.message.content:
-            await event.message.add_reaction("🧙")
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!w', '').strip()
+    print(input_cmd)
+    async def send_command(cmd, reaction, fn):
+        return await command(message, input_cmd, cmd, reaction, fn)
 
-            res = ask_llama(prompt)
-            await event.message.respond(res)
-        elif '!4' in event.message.content:
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!4', '').strip()
+    async def cmd_speak():
+        print(input_text)
+        path = await tts(input_text)
+        return await speak(ctx, bot, path)
+    
+    async def cmd_leave():
+        return await leave(bot)
 
-            res = await chat(prompt, event=event, gpt4=True)
-            while len(res) > 1900:
-                await event.message.respond(res[:1900])
-                res = res[1900:]
-            await event.message.respond(res)
+    command_list = [
+        await send_command('dominos', "🍕", dominos),
+        await send_command('relapse', "😭", relapse),
+        await send_command('tft', "🐧", lambda : get_tft_stats(input_text)),
+        await send_command('w', "🧙", lambda : ask_llama(input_text)),
+        await send_command('lb', "🏋️", lambda : weight(input_text if input_text != '' else None, message.author.id)),
+        await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
+        await send_command('s', "🔊", cmd_speak),
+        await send_command('l', "🔊", cmd_leave)
+    ]
 
-        elif '!qt' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!qt', '').strip().lower()
+    if not any(command_list):
+        async def gpt_chat():
+            return await chat(text)
+        await command(message, text, None, "🤔", gpt_chat)
 
-            body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
+        # elif '!qt' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     body = message.content.replace(f'<@{str(me.id)}>', '').replace('!qt', '').strip().lower()
 
-            print(body_serving)
+        #     body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
 
-            res = track_calories(body_serving)
-            await event.message.respond(res)
-        elif '!ct' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!ct', '').strip().lower()
+        #     print(body_serving)
 
-            res = track_calories(body)
-            await event.message.respond(res)
-        elif '!q' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!q', '').strip().lower()
+        #     res = track_calories(body_serving)
+        #     await message.channel.send(res)
+        # elif '!ct' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     body = message.content.replace(f'<@{str(me.id)}>', '').replace('!ct', '').strip().lower()
 
-            body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
+        #     res = track_calories(body)
+        #     await message.channel.send(res)
+        # elif '!q' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     body = message.content.replace(f'<@{str(me.id)}>', '').replace('!q', '').strip().lower()
 
-            print(body_serving)
+        #     body_serving = ' and '.join([f'1 serving of {food.strip()}' for food in body.split(',')])
 
-            res = see_calories(body_serving)
-            await event.message.respond(res)
-        elif '!c' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip().lower()
+        #     print(body_serving)
 
-            res = see_calories(body)
-            await event.message.respond(res)
-        elif '!s' in event.message.content:
-            await event.message.add_reaction("🥩")
-            body = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!s', '').strip().lower()
+        #     res = see_calories(body_serving)
+        #     await message.channel.send(res)
+        # elif '!c' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     body = message.content.replace(f'<@{str(me.id)}>', '').replace('!c', '').strip().lower()
 
-            items = get_calories(body)
-            res = '\n'.join([str(item) for item in items])
-            await event.message.respond(res)
-        elif '!r' in event.message.content:
-            await event.message.add_reaction("🥩")
-            res = remove_latest()
-            await event.message.respond(res)
-        elif '!lb' in event.message.content:
-            await event.message.add_reaction("🏋️")
-            num = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!lb', '').strip()
+        #     res = see_calories(body)
+        #     await message.channel.send(res)
+        # elif '!s' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     body = message.content.replace(f'<@{str(me.id)}>', '').replace('!s', '').strip().lower()
 
-            res = weight(num if num != '' else None, event.message.author.id)
-            await event.message.respond(res) 
-        elif '!g' in event.message.content:
-            await event.message.add_reaction("👀")
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').replace('!g', '').strip()
+        #     items = get_calories(body)
+        #     res = '\n'.join([str(item) for item in items])
+        #     await message.channel.send(res)
+        # elif '!r' in message.content:
+        #     await event.message.add_reaction("🥩")
+        #     res = remove_latest()
+        #     await message.channel.send(res)
+        # elif '!lb' in message.content:
+        #     await event.message.add_reaction("🏋️")
+        #     num = message.content.replace(f'<@{str(me.id)}>', '').replace('!lb', '').strip()
 
-            res = get_media(prompt, 'predict')
-            await event.message.respond(res) 
-        elif '!i' in event.message.content:
-            await event.message.add_reaction("📷")
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
+        #     res = weight(num if num != '' else None, event.message.author.id)
+        #     await message.channel.send(res) 
+        # elif '!i' in message.content:
+        #     await event.message.add_reaction("📷")
+        #     prompt = message.content.replace(f'<@{str(me.id)}>', '').strip()
 
-            res = get_media(prompt, 'predict_1')
-            await event.message.respond(res)
-        else:
-            prompt = event.message.content.replace(f'<@{str(me.id)}>', '').strip()
-
-            res = await chat(prompt, event=event)
-            while len(res) > 1900:
-                await event.message.respond(res[:1900])
-                res = res[1900:]
-            await event.message.respond(res)
-
-async def check_for_new_game():
-    global latest_event
-    frequency = 180
-    while True:
-        await asyncio.sleep(frequency)
-        
-        if latest_event is None:
-            print("Ping the bot first")
-            continue
-
-        try:
-            refresh()
-            await asyncio.sleep(3)
-
-            source = get_game_json()
-
-            last_game = source['data'][0]
-            last_game_timestamp = last_game['created_at']
-            prev_game_timestamp = read('prev_game_timestamp.txt')
-
-            if prev_game_timestamp != last_game_timestamp and last_game['queue_info']['game_type'] == 'SOLORANKED' and last_game['myData']['champion_id'] == 14:
-                await latest_event.message.respond( f'🚨🚨🚨 NEW SION GAME 🚨🚨🚨')
-
-                await latest_event.message.respond(web_scrape())
-                await latest_event.message.respond(opapi())
-
-                write('prev_game_timestamp.txt', last_game_timestamp)
-            else:
-                print(f"No new Sion game at @ {datetime.now().strftime('%m/%d/%Y, %H:%M:%S')} EST")
-        except Exception as e:
-            print(e)
+        #     res = get_media(prompt, 'predict_1')
+        #     await message.channel.send(res)
+        # else:
 
 
 if __name__ == "__main__":
-    print(datetime.now())
-    # asyncio.get_event_loop().create_task(check_for_new_game())
-    bot.run()
+    # client.run(config['discord']['token'])
+    bot.run(config['discord']['token'])

@@ -7,3 +7,5 @@ weight_graphs
 temp.gif
 temp.png
 foods.json
+speech.mp3
+__pycache__/*
