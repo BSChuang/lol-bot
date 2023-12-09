@@ -5,7 +5,7 @@ import configparser
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-ffmpeg_path = config['discord']['ffmpeg_path']
+ffmpeg_path = config['discord']['ffmpeg_path'] if 'ffmpeg_path' in config['discord'] else None 
 
 async def reply(message, text):
     await message.channel.send(text)
@@ -30,7 +30,10 @@ async def speak(ctx, bot, path):
         voice_client = await voice_channel.connect(self_deaf=True)
         sleep(0.5)
 
-    voice_client.play(discord.FFmpegPCMAudio(source=path, executable=ffmpeg_path))
+    if ffmpeg_path:
+        voice_client.play(discord.FFmpegPCMAudio(source=path, executable=ffmpeg_path))
+    else:
+        voice_client.play(discord.FFmpegPCMAudio(source=path))
 
     return
 
