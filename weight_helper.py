@@ -11,7 +11,7 @@
 from calorieninja import get_calories
 import pandas as pd
 import matplotlib.pyplot as plt
-import hikari
+import discord
 import math
 import os
 
@@ -104,7 +104,7 @@ def weight(num, user_id):
         plt.savefig('weight_graph.png', dpi=300)
         plt.clf()
 
-        f = hikari.File('./weight_graph.png')
+        f = discord.File('./weight_graph.png')
         return f
     except Exception as e:
         print(e)

@@ -8,7 +8,10 @@ config.read("config.ini")
 ffmpeg_path = config['discord']['ffmpeg_path'] if 'ffmpeg_path' in config['discord'] else None 
 
 async def reply(message, text):
-    await message.channel.send(text)
+    if type(text) == str:
+        await message.channel.send(text)
+    else:
+        await message.channel.send(file=text)
 
 async def react(message, reaction):
     await message.add_reaction(reaction)
@@ -51,7 +54,7 @@ async def command(message, input_cmd, cmd, reaction, fn):
     if output is None:
         return True
     
-    while len(output) > 1900:
+    while type(output) == str and len(output) > 1900:
         await reply(message, output)
         output = output[1900:]
     await reply(message, output)

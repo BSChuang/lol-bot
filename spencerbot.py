@@ -276,19 +276,23 @@ async def on_message(message):
         return await command(message, input_cmd, cmd, reaction, fn)
 
     async def cmd_speak():
-        print(input_text)
+        if input_text == '':
+            return None
         path = await tts(input_text)
         return await speak(ctx, bot, path)
     
     async def cmd_leave():
         return await leave(bot)
+    
+    async def cmd_weight():
+        return weight(input_text if input_text != '' else None, message.author.id)
 
     command_list = [
         await send_command('dominos', "🍕", dominos),
         await send_command('relapse', "😭", relapse),
         await send_command('tft', "🐧", lambda : get_tft_stats(input_text)),
         await send_command('w', "🧙", lambda : ask_llama(input_text)),
-        await send_command('lb', "🏋️", lambda : weight(input_text if input_text != '' else None, message.author.id)),
+        await send_command('lb', "🏋️", cmd_weight),
         await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
         await send_command('s', "🔊", cmd_speak),
         await send_command('l', "🔊", cmd_leave)
