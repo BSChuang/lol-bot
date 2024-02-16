@@ -258,35 +258,50 @@ def set_preface(new_preface):
         preface = new_preface + '\n'
     return "Preface set!"
 
+user_speak = set()
 @bot.event
 async def on_message(message):
     ctx = await bot.get_context(message)
     bot_id = '<@1064717164579393577>'
-    if message.author == client.user or not message.content.startswith(bot_id):
-        return
+    user_id = message.author.id
 
-    text = message.content.lstrip(bot_id + ' ').strip()
+    text = message.content.replace(bot_id, '').strip()
+
     if ' ' in text:
         input_cmd, input_text = text.split(' ', 1)
     else:
         input_cmd, input_text = text, None
 
-    print(input_cmd)
     async def send_command(cmd, reaction, fn):
         return await command(message, input_cmd, cmd, reaction, fn)
+    
+    async def cmd_toggle_speak():
+        if user_id in user_speak:
+            user_speak.remove(user_id)
+            if len(user_speak) == 0:
+                await leave(bot)
+            return "TTS deactivated!"
+        else:
+            user_speak.add(user_id)
+            return "TTS activated!"
 
     async def cmd_speak():
-        if input_text == '':
-            return None
-        path = await tts(input_text)
-        return await speak(ctx, bot, path)
+        if message.author == client.user or not message.content.startswith(bot_id):
+            path = await tts(text)
+            return await speak(ctx, bot, path)
     
     async def cmd_leave():
         return await leave(bot)
     
     async def cmd_weight():
         return weight(input_text if input_text != '' else None, message.author.id)
-
+    
+    if user_id in user_speak:
+        await cmd_speak()
+        
+    if message.author == client.user or not message.content.startswith(bot_id):
+        return
+    
     command_list = [
         await send_command('dominos', "🍕", dominos),
         await send_command('relapse', "😭", relapse),
@@ -294,7 +309,7 @@ async def on_message(message):
         await send_command('w', "🧙", lambda : ask_llama(input_text)),
         await send_command('lb', "🏋️", cmd_weight),
         await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
-        await send_command('s', "🔊", cmd_speak),
+        await send_command('st', "🔊", cmd_toggle_speak),
         await send_command('l', "🔊", cmd_leave)
     ]
 

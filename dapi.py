@@ -38,7 +38,7 @@ async def speak(ctx, bot, path):
     else:
         voice_client.play(discord.FFmpegPCMAudio(source=path))
 
-    return
+    return None
 
 async def leave(bot):
     if bot.voice_clients != []:
