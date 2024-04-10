@@ -299,6 +299,9 @@ async def on_message(message):
     async def cmd_ask_llama():
         return await chat(input_text, llama=True)
     
+    async def cmd_clear():
+        return clear()
+    
     if user_id in user_speak:
         await cmd_speak()
         
@@ -310,6 +313,7 @@ async def on_message(message):
         await send_command('relapse', "😭", relapse),
         await send_command('tft', "🐧", lambda : get_tft_stats(input_text)),
         await send_command('w', "🧙", cmd_ask_llama),
+        await send_command('c', "😭", cmd_clear),
         await send_command('lb', "🏋️", cmd_weight),
         await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
         await send_command('st', "🔊", cmd_toggle_speak),
