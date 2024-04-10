@@ -194,7 +194,7 @@ async def relapse():
 
 messages = []
 preface = ""
-async def chat(prompt, gpt4 = False):
+async def chat(prompt, gpt4 = False, llama = False):
     global preface
     print('preface:', preface)
     try:
@@ -208,7 +208,7 @@ async def chat(prompt, gpt4 = False):
 
         print(messages)
 
-        answer = call_gpt(messages, preface, gpt4)
+        answer = ask_llama(messages) if llama else call_gpt(messages, preface, gpt4)
 
         messages.append({'role': 'assistant', 'content': answer})
 
@@ -297,7 +297,7 @@ async def on_message(message):
         return weight(input_text if input_text != '' else None, message.author.id)
     
     async def cmd_ask_llama():
-        return ask_llama(input_text)
+        return chat(input_text, llama=True)
     
     if user_id in user_speak:
         await cmd_speak()
