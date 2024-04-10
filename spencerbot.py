@@ -16,6 +16,7 @@ from huggingface import get_media
 import discord
 from discord.ext import commands
 from oai import tts
+import korean
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -267,6 +268,10 @@ async def on_message(message):
 
     text = message.content.replace(bot_id, '').strip()
 
+    if message.author == bot.user:
+        return
+    
+
     if ' ' in text:
         input_cmd, input_text = text.split(' ', 1)
     else:
@@ -299,10 +304,15 @@ async def on_message(message):
     async def cmd_ask_llama():
         return await chat(input_text, llama=True)
     
+    async def cmd_clear():
+        return clear()
+    
     if user_id in user_speak:
         await cmd_speak()
+
+    await korean.on_message(bot, message)
         
-    if message.author == client.user or not message.content.startswith(bot_id):
+    if not message.content.startswith(bot_id):
         return
     
     command_list = [
@@ -310,6 +320,7 @@ async def on_message(message):
         await send_command('relapse', "😭", relapse),
         await send_command('tft', "🐧", lambda : get_tft_stats(input_text)),
         await send_command('w', "🧙", cmd_ask_llama),
+        await send_command('c', "😭", cmd_clear),
         await send_command('lb', "🏋️", cmd_weight),
         await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
         await send_command('st', "🔊", cmd_toggle_speak),

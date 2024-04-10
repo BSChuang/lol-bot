@@ -1,4 +1,3 @@
-import openai
 from openai import OpenAI
 import configparser
 from pathlib import Path
@@ -12,7 +11,7 @@ client = OpenAI(api_key=config['discord']['openai_key'])
 async def tts(text):
     response = client.audio.speech.create(
         model="tts-1",
-        voice="onyx",
+        voice="alloy",
         input=text
     )
 
@@ -42,6 +41,30 @@ def vision(image):
         )
     
     return response.choices[0].message.content
+
+def call_gpt(messages, preface = None, errored=False, gpt4 = False):
+    system_preface = [{'role': 'system', 'content': preface}] if preface else []
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4" if gpt4 else "gpt-3.5-turbo",
+            messages= system_preface + messages
+        )
+
+        answer = completion.choices[0].message.content.strip()
+        return answer
+    except Exception as e:
+        if 'Error communicating with OpenAI' in str(e) and not errored:
+            sleep(1)
+            return call_gpt(messages, preface, errored=True, gpt4=gpt4)
+        print(e)
+        return str(e)
+    
+def append_user_message(message, text):
+    return message.append({'role': 'user', 'content': text})
+
+def append_assistant_message(message, text):
+    return message.append({'role': 'assistant', 'content': text})
+
 
 if __name__ == "__main__":
     print(vision(''))

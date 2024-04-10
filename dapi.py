@@ -55,7 +55,7 @@ async def command(message, input_cmd, cmd, reaction, fn):
         return True
     
     while type(output) == str and len(output) > 1900:
-        await reply(message, output)
+        await reply(message, output[:1900])
         output = output[1900:]
     await reply(message, output)
 
