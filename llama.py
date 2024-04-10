@@ -10,9 +10,10 @@ def ask_llama(prompt):
     }
 
     response = requests.post(api_url, json=body)
+    if response.status_code != 200:
+        return "error generating response."
     text = response.text
     str_list = re.findall(r'{.+"done":false}', text)
     res_list = [json.loads(x)['response'] for x in str_list]
     concat_response = ''.join(res_list)
-    print(concat_response)
     return concat_response

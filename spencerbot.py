@@ -296,6 +296,9 @@ async def on_message(message):
     async def cmd_weight():
         return weight(input_text if input_text != '' else None, message.author.id)
     
+    async def cmd_ask_llama():
+        return ask_llama(input_text)
+    
     if user_id in user_speak:
         await cmd_speak()
         
@@ -306,7 +309,7 @@ async def on_message(message):
         await send_command('dominos', "🍕", dominos),
         await send_command('relapse', "😭", relapse),
         await send_command('tft', "🐧", lambda : get_tft_stats(input_text)),
-        await send_command('w', "🧙", lambda : ask_llama(input_text)),
+        await send_command('w', "🧙", cmd_ask_llama),
         await send_command('lb', "🏋️", cmd_weight),
         await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
         await send_command('st', "🔊", cmd_toggle_speak),

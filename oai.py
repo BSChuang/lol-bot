@@ -12,7 +12,7 @@ client = OpenAI(api_key=config['discord']['openai_key'])
 async def tts(text):
     response = client.audio.speech.create(
         model="tts-1",
-        voice="nova",
+        voice="onyx",
         input=text
     )
 
