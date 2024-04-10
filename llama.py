@@ -3,17 +3,16 @@ import re
 import json
 
 def ask_llama(messages):
-    api_url = "http://localhost:11434/api/generate"
+    api_url = "http://localhost:11434/api/chat"
     body = {
         'model': 'llama2-uncensored',
-        'messages': messages
+        'messages': messages,
+        'stream': False
     }
 
     response = requests.post(api_url, json=body)
     if response.status_code != 200:
         raise Exception("error generating wizard response.")
     text = response.text
-    str_list = re.findall(r'{.+"done":false}', text)
-    res_list = [json.loads(x)['response'] for x in str_list]
-    concat_response = ''.join(res_list)
-    return concat_response
+    json_res = json.loads(text)
+    return json_res['message']['content']

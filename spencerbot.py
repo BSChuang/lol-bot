@@ -297,7 +297,7 @@ async def on_message(message):
         return weight(input_text if input_text != '' else None, message.author.id)
     
     async def cmd_ask_llama():
-        return chat(input_text, llama=True)
+        return await chat(input_text, llama=True)
     
     if user_id in user_speak:
         await cmd_speak()
