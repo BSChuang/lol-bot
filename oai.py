@@ -65,6 +65,27 @@ def append_user_message(message, text):
 def append_assistant_message(message, text):
     return message.append({'role': 'assistant', 'content': text})
 
+def whisper(audio_path, language):
+    audio_file= open(audio_path, "rb")
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file,
+        language=language
+    )
+    return transcription.text
+    
+
+def dalle(prompt):
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+
+    return response.data[0].url
+
 
 if __name__ == "__main__":
     print(vision(''))

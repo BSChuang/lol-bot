@@ -15,7 +15,7 @@ from weight_helper import see_calories, track_calories, remove_latest, weight
 from huggingface import get_media
 import discord
 from discord.ext import commands
-from oai import tts
+from oai import tts, dalle
 import korean
 
 config = configparser.ConfigParser()
@@ -307,6 +307,9 @@ async def on_message(message):
     async def cmd_clear():
         return clear()
     
+    async def cmd_dalle():
+        return dalle(input_text)
+    
     if user_id in user_speak:
         await cmd_speak()
 
@@ -322,9 +325,10 @@ async def on_message(message):
         await send_command('w', "🧙", cmd_ask_llama),
         await send_command('c', "😭", cmd_clear),
         await send_command('lb', "🏋️", cmd_weight),
-        await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
+        # await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
         await send_command('st', "🔊", cmd_toggle_speak),
-        await send_command('l', "🔊", cmd_leave)
+        await send_command('l', "🔊", cmd_leave),
+        await send_command('i', '📷', cmd_dalle)
     ]
 
     if not any(command_list):
