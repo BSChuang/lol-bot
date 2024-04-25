@@ -4,10 +4,8 @@ import glob
 from PIL import Image
 import configparser
 import os
-import pathlib
-import shutil
-import hikari
 import urllib
+import discord
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -17,50 +15,32 @@ BEARER = config['discord']['hf_token']
 FPS = 156
 
 
-def get_media(prompt, endpoint):
+def get_media(prompt):
     try:
         data = None
-        for i in range(8):
-            print(f"attempt {i}")
-            response = requests.post(f"{BASE_URL}/run/{endpoint}", headers={
+        response = requests.post(
+            f"{BASE_URL}/run/predict_1", 
+            timeout=720,
+            headers={
                 "Authorization": f"Bearer {BEARER}"
-            }, json={
+            }, 
+            json={
                 "data": [
                     prompt,
                 ]
-            })
+            },
+        )
 
-            if response.status_code == 200:
-                if endpoint == 'predict':
-                    data = response.json()['data'][0]['name']
-                else:
-                    data = response.json()['data'][0]
-                break
+        if response.status_code == 200:
+            data = response.json()['data'][0]
 
         if data == None:
             return "Failed to generate."
         
-        if endpoint == 'predict':
-            response = requests.get(f"{BASE_URL}/file={data}", headers={
-                "Authorization": f"Bearer {BEARER}"
-            })
-            f = open("temp.mp4", 'wb')
-            for chunk in response.iter_content(chunk_size=255): 
-                if chunk: # filter out keep-alive new chunks
-                    f.write(chunk)
-            f.close()
-
-            convert_mp4_to_jpgs("./temp.mp4")
-            os.remove('./temp.mp4')
-            make_gif("output")
-            shutil.rmtree(pathlib.Path('./output'))
-
-            result = hikari.File('./temp.gif')
-        else:
-            image = urllib.request.urlopen(data)
-            with open('temp.png', 'wb') as f:
-                f.write(image.file.read())
-            result = hikari.File('./temp.png')
+        image = urllib.request.urlopen(data)
+        with open('temp.png', 'wb') as f:
+            f.write(image.file.read())
+        result = discord.File('temp.png')
         
         return result
     except Exception as e:

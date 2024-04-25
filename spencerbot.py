@@ -310,6 +310,9 @@ async def on_message(message):
     async def cmd_dalle():
         return dalle(input_text)
     
+    async def cmd_hugging():
+        return get_media(input_text)
+    
     if user_id in user_speak:
         await cmd_speak()
 
@@ -325,7 +328,7 @@ async def on_message(message):
         await send_command('w', "🧙", cmd_ask_llama),
         await send_command('c', "😭", cmd_clear),
         await send_command('lb', "🏋️", cmd_weight),
-        # await send_command('i', "📷", lambda : get_media(input_text, 'predict_1')),
+        await send_command('h', "📷", cmd_hugging),
         await send_command('st', "🔊", cmd_toggle_speak),
         await send_command('l', "🔊", cmd_leave),
         await send_command('i', '📷', cmd_dalle)
