@@ -4,7 +4,7 @@ from utils import download_from_url
 
 CHANNEL = "conversation"
 SERVER = "Chil's server"
-PREFACE = "You are my korean tutor. We are having a conversation to help practice my Korean. Please speak in Korean if I speak in Korean and English if I speak in English."
+PREFACE = "You are my korean tutor. We are having a conversation to help practice my Korean. Please speak in Korean except when I ask a question in English. End with an English translation of what you have said."
 
 conversation_messages = []
 path = ''
