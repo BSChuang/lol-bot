@@ -5,3 +5,4 @@ tabulate
 matplotlib
 opencv-python
 discord.py[voice]
+google-cloud-texttospeech

@@ -17,6 +17,7 @@ import discord
 from discord.ext import commands
 from oai import tts, dalle
 import korean
+import gcloud
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -28,6 +29,20 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+voices = {
+    374970992419799042: ("ko-KR", "ko-KR-Neural2-C"), # Ben
+    # 276216359749419009 # Suchir
+    # 267891995157069826 # Spencer
+    202579063217455104: ("ja-JP", "ja-JP-Neural2-D") # Gnole
+    # 283436282082885632 # Alex
+    # 369923734447849477 # Harrison
+    # 762044954930446428 # Mistry
+    # 660172839655178250 # Paul
+    # 815086417612111922 # Dylan
+    # 711029919546736651 # Deverell GOAT
+    # 304353367294214155 # Deverell Economist
+}
 
 
 def tier_to_roman(tier):
@@ -291,8 +306,9 @@ async def on_message(message):
             return "TTS activated!"
 
     async def cmd_speak():
+        voice = voices[message.author.id] if message.author.id in voices else ('en-US', 'en-US-Casual-K')
         if message.author == client.user or not message.content.startswith(bot_id):
-            path = await tts(text)
+            path = await gcloud.tts(text, voice)
             return await speak(ctx, bot, path)
     
     async def cmd_leave():

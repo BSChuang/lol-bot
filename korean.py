@@ -4,7 +4,13 @@ from utils import download_from_url
 
 CHANNEL = "conversation"
 SERVER = "Chil's server"
-PREFACE = "You are my korean tutor. We are having a conversation to help practice my Korean. Please speak in Korean except when I ask a question in English. End with an English translation of what you have said."
+PREFACE = "You are my korean tutor. We are having a conversation to help practice my Korean. Please speak in Korean except when I ask a question in English. Start by translating what was previously said and end with an English translation of what you have said.\
+    It should follow the format:\n\
+    [User translation]\n\
+    ---\n\
+    [Korean text]\n\
+    ---\n\
+    ||[English translation]||"
 
 conversation_messages = []
 path = ''
@@ -36,6 +42,9 @@ async def on_message(bot, message):
     oai.append_assistant_message(conversation_messages, response)
 
     await dapi.reply(message, response)
+
+    if ('---' in response):
+        response = response.split('---')[1]
     path = await oai.tts(response)
     await dapi.speak(ctx, bot, path)
 

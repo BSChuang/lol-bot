@@ -4,3 +4,4 @@ openai_key = OPENAIKEYHERE
 hf_token = HGTOKENHERE
 calorie_token = TOKEN
 ffmpeg_path = PATH
+gcloud_cred_path = PATH
