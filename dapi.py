@@ -41,9 +41,18 @@ async def speak(ctx, bot, path):
 
     return None
 
-async def leave(bot):
-    if bot.voice_clients != []:
-        await bot.voice_clients[0].disconnect()
+async def disconnect(ctx, bot):
+    # Check if the bot is connected to a voice channel
+    if bot.voice_clients:
+        # Find the voice client associated with the server where the command is invoked
+        voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice_client:
+            await voice_client.disconnect()
+            await ctx.send("Disconnected from the voice channel.")
+        else:
+            await ctx.send("The bot is not connected to any voice channel in this server.")
+    else:
+        await ctx.send("The bot is not connected to any voice channel.")
 
 async def command(message, input_cmd, cmd, reaction, fn):
     if cmd is not None and input_cmd != f'!{cmd}':

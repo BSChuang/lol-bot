@@ -1,4 +1,4 @@
-from dapi import command, leave, speak
+from dapi import command, disconnect, speak
 import random
 import configparser
 from datetime import datetime, timedelta
@@ -119,7 +119,7 @@ async def on_message(message):
             return await speak(ctx, bot, path)
     
     async def cmd_leave():
-        return await leave(bot)
+        return await disconnect(bot)
     
     async def cmd_weight():
         return weight(input_text if input_text != '' else None, message.author.id)
@@ -144,6 +144,7 @@ async def on_message(message):
         await send_command('lb', "🏋️", cmd_weight),
         await send_command('st', "🔊", cmd_toggle_speak),
         await send_command('l', "🔊", cmd_leave),
+        await send_command('stop', "🔊", cmd_leave),
         await send_command('play', '🔊', cmd_youtube)
     ]
 
