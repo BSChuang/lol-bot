@@ -1,3 +1,4 @@
+import asyncio
 import os
 import configparser
 
@@ -38,5 +39,6 @@ async def tts(text, voice):
 
     return "speech.mp3"
 
+
 if __name__ == "__main__":
-    tts("Hello")
+    asyncio.run(tts("번역이 조금 헷갈렸어요. 올바른 한국어 번역은 저는 그에게 시험공부를 열심히 하라고 말했어요입니다. ", ("ko-KR", "ko-KR-Wavenet-C")))

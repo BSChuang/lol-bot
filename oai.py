@@ -46,7 +46,7 @@ def call_gpt(messages, preface = None, errored=False, gpt4 = False):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     try:
         completion = client.chat.completions.create(
-            model="gpt-4-turbo" if gpt4 else "gpt-4-turbo",
+            model="gpt-4o-mini",
             messages= system_preface + messages
         )
 

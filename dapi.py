@@ -9,7 +9,8 @@ ffmpeg_path = config['discord']['ffmpeg_path'] if 'ffmpeg_path' in config['disco
 
 async def reply(message, text):
     if type(text) == str:
-        await message.channel.send(text)
+        for i in range(0, len(text), 1999):
+            await message.channel.send(text[i:i+1999])
     else:
         await message.channel.send(file=text)
 
