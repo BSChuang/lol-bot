@@ -8,7 +8,7 @@ async def download_youtube_audio(search_query):
         command = [
             "yt-dlp",
             "-x", "--audio-format", "mp3",
-            "--output", "temp.mp3",  # Save as temp.mp3
+            "--output", "./temp/temp.mp3",  # Save as temp.mp3
             f"ytsearch1:{search_query}"
         ]
         subprocess.run(command, check=True)
