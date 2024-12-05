@@ -119,7 +119,7 @@ async def on_message(message):
             return await speak(ctx, bot, path)
     
     async def cmd_leave():
-        return await disconnect(bot)
+        return await disconnect(ctx, bot)
     
     async def cmd_weight():
         return weight(input_text if input_text != '' else None, message.author.id)
