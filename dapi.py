@@ -34,6 +34,10 @@ async def speak(ctx, bot, path):
         voice_client = await voice_channel.connect(self_deaf=True)
         sleep(0.5)
 
+    # Stop any currently playing audio
+    if voice_client.is_playing():
+        voice_client.stop()
+
     if ffmpeg_path:
         voice_client.play(discord.FFmpegPCMAudio(source=path, executable=ffmpeg_path))
     else:
