@@ -111,7 +111,6 @@ def summarize(new_message, all_messages):
     for message in channel_messages[index:]:
         all_text += f'{message["name"]}: {message["text"]}\n\n\n'
 
-    print(all_text)
     return oai.call_gpt_single(all_text)
 
 def fact_check(message, all_messages):
