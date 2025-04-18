@@ -9,6 +9,7 @@ import korean
 import service.VocabService
 import service.YoutubeService
 import gcloud
+import oai
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -38,7 +39,7 @@ def td_format(td_object):
     return ", ".join(strings)
 
 voices = {
-    374970992419799042: ("ko-KR", "ko-KR-Neural2-C"), # Ben
+    # 374970992419799042: ("ko-KR", "ko-KR-Neural2-C"), # Ben
     # 276216359749419009 # Suchir
     # 267891995157069826 # Spencer
     202579063217455104: ("ja-JP", "ja-JP-Neural2-D") # Gnole
@@ -80,7 +81,6 @@ async def relapse():
 
 
 messages = []
-preface = ""
 
 user_speak = set()
 @bot.event
@@ -106,7 +106,7 @@ async def on_message(message):
         if user_id in user_speak:
             user_speak.remove(user_id)
             if len(user_speak) == 0:
-                await leave(bot)
+                await disconnect(ctx, bot)
             return "TTS deactivated!"
         else:
             user_speak.add(user_id)
@@ -127,6 +127,12 @@ async def on_message(message):
     async def cmd_youtube():
         file = await service.YoutubeService.download_youtube_audio(input_text)
         return await speak(ctx, bot, file)
+    
+    async def gpt_chat():
+        oai.append_user_message(messages, text)
+        answer = oai.call_gpt(messages, text)
+        oai.append_assistant_message(messages, answer)
+        return answer
     
     if user_id in user_speak:
         await cmd_speak()
@@ -149,8 +155,6 @@ async def on_message(message):
     ]
 
     if not any(command_list):
-        async def gpt_chat():
-            return await chat(text)
         await command(message, text, None, "🤔", gpt_chat)
 
 

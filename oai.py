@@ -42,22 +42,15 @@ def vision(image):
     
     return response.choices[0].message.content
 
-def call_gpt(messages, preface = None, errored=False, gpt4 = False):
+def call_gpt(messages, preface = None):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
-    try:
-        completion = client.chat.completions.create(
+    completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages= system_preface + messages
         )
 
-        answer = completion.choices[0].message.content.strip()
-        return answer
-    except Exception as e:
-        if 'Error communicating with OpenAI' in str(e) and not errored:
-            sleep(1)
-            return call_gpt(messages, preface, errored=True, gpt4=gpt4)
-        print(e)
-        return str(e)
+    answer = completion.choices[0].message.content.strip()
+    return answer
     
 def append_user_message(message, text):
     return message.append({'role': 'user', 'content': text})
