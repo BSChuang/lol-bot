@@ -109,15 +109,21 @@ def summarize(new_message, all_messages):
         return 'Message could not be found!'
     all_text = 'Summarize the following exchange of messages:\n\n'
     for message in channel_messages[index:]:
-        all_text += f'{message["name"]}: {message["text"]}\n\n\n'
+        all_text += f'{message["name"]}: {message["text"]}\n\n'
 
     return oai.call_gpt_single(all_text)
 
 def fact_check(message, all_messages):
-    index, referenced_message = find_message_by_id(all_messages, message['reference_id'])
+    channel_messages = [message for message in all_messages if message['channel_id'] == message['channel_id']]
+    index, referenced_message = find_message_by_id(channel_messages, message['reference_id'])
     if not referenced_message:
         return 'Message could not be found!'
-    return oai.call_gpt_single(f'Fact check the following message: {referenced_message["text"]}')
+
+    prompt = f'Fact check the following message, put an emphasis on recent relevancy: {referenced_message["text"]}\n\nHere are the previous 10 messages for context:\n'
+    for message in channel_messages[index-10:index]:
+        prompt += f'{message["name"]}: {message["text"]}\n\n'
+
+    return oai.call_gpt_single(prompt, 'gpt-4o-search-preview')
     
 
 messages = []

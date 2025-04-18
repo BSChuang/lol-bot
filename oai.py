@@ -42,18 +42,19 @@ def vision(image):
     
     return response.choices[0].message.content
 
-def call_gpt(messages, preface = None):
+def call_gpt(messages, preface = None, model='gpt-4o'):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     completion = client.chat.completions.create(
-            model="gpt-4o",
+            model=model,
             messages= system_preface + messages
         )
 
     answer = completion.choices[0].message.content.strip()
+
     return answer
 
-def call_gpt_single(text):
-    return call_gpt([{'role': 'user', 'content': text}])
+def call_gpt_single(text, model='gpt-4o'):
+    return call_gpt([{'role': 'user', 'content': text}], model=model)
     
 def append_user_message(message, text):
     return message.append({'role': 'user', 'content': text})
