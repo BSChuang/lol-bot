@@ -79,17 +79,65 @@ async def relapse():
                           '<:spencerangel:996846084712312853>', '<:spencerbaby:1017119767359926282>', '<:spencerflirt:1046478467191013447>', '<:supersadspencer:1002683850964611153>'])
     return emote
 
+def get_users(ctx):
+    member_list = list(ctx.guild.members)
+    return {member.id: member.name for member in member_list}
+
+def find_message_by_id(all_messages, id):
+    for index, message in enumerate(all_messages):
+        if message['message_id'] == id:
+            return index, message
+    return None, None
+
+def build_message(ctx, message, text):
+    member_map = get_users(ctx)
+    for uid, name in member_map.items():
+        text = text.replace(str(uid), name)
+
+    return {
+        'message_id': message.id,
+        'channel_id': message.channel.id,
+        'reference_id': message.reference.message_id if message.reference else None,
+        'name': message.author.name,
+        'text': text
+    }
+
+def summarize(new_message, all_messages):
+    channel_messages = [message for message in all_messages if message['channel_id'] == new_message['channel_id']]
+    index, referenced_message = find_message_by_id(channel_messages, new_message['reference_id'])
+    if not referenced_message:
+        return 'Message could not be found!'
+    all_text = 'Summarize the following exchange of messages:\n\n'
+    for message in channel_messages[index:]:
+        all_text += f'{message["name"]}: {message["text"]}\n\n\n'
+
+    print(all_text)
+    return oai.call_gpt_single(all_text)
+
+def fact_check(message, all_messages):
+    index, referenced_message = find_message_by_id(all_messages, message['reference_id'])
+    if not referenced_message:
+        return 'Message could not be found!'
+    return oai.call_gpt_single(f'Fact check the following message: {referenced_message["text"]}')
+    
 
 messages = []
+all_messages = []
 
 user_speak = set()
 @bot.event
 async def on_message(message):
+    global all_messages
+
     ctx = await bot.get_context(message)
     bot_id = '<@1064717164579393577>'
     user_id = message.author.id
 
     text = message.content.replace(bot_id, '').strip()
+
+    new_message = build_message(ctx, message, text)
+    all_messages.append(new_message)
+    all_messages = all_messages[-300:]
 
     if message.author == bot.user:
         return
@@ -127,18 +175,24 @@ async def on_message(message):
     async def cmd_youtube():
         file = await service.YoutubeService.download_youtube_audio(input_text)
         return await speak(ctx, bot, file)
+
+    async def cmd_summarize():
+        return summarize(new_message, all_messages[:-1])
     
     async def gpt_chat():
         oai.append_user_message(messages, text)
         answer = oai.call_gpt(messages, text)
         oai.append_assistant_message(messages, answer)
         return answer
+
+    async def cmd_fact_check():
+        return fact_check(new_message, all_messages)
+
     
     if user_id in user_speak:
         await cmd_speak()
 
     await korean.on_message(bot, message)
-    # await receipts.on_message(bot, message)
     await service.VocabService.on_message(bot, message)
         
     if not message.content.startswith(bot_id):
@@ -151,7 +205,9 @@ async def on_message(message):
         await send_command('st', "🔊", cmd_toggle_speak),
         await send_command('l', "🔊", cmd_leave),
         await send_command('stop', "🔊", cmd_leave),
-        await send_command('play', '🔊', cmd_youtube)
+        await send_command('play', '🔊', cmd_youtube),
+        await send_command('summarize', '🍕', cmd_summarize),
+        await send_command('check', '🍕', cmd_fact_check),
     ]
 
     if not any(command_list):
