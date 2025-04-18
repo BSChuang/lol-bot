@@ -136,7 +136,7 @@ async def on_message(message):
 
     new_message = build_message(ctx, message, text)
     all_messages.append(new_message)
-    all_messages = all_messages[-300:]
+    all_messages = all_messages[-500:]
 
     if message.author == bot.user:
         return
@@ -205,8 +205,8 @@ async def on_message(message):
         await send_command('l', "🔊", cmd_leave),
         await send_command('stop', "🔊", cmd_leave),
         await send_command('play', '🔊', cmd_youtube),
-        await send_command('summarize', '🍕', cmd_summarize),
-        await send_command('check', '🍕', cmd_fact_check),
+        await send_command('summarize', '📋', cmd_summarize),
+        await send_command('check', '✅', cmd_fact_check),
     ]
 
     if not any(command_list):
