@@ -127,7 +127,7 @@ def fact_check(message, all_messages):
     return oai.call_gpt_single(prompt, 'gpt-4o-search-preview')
 
 def sora(prompt):
-    file_path = 'video.mp4'# oai.sora(prompt)
+    file_path = oai.sora(prompt)
     file = discord.File(file_path)
     return file
     
