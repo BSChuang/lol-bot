@@ -1,3 +1,4 @@
+import dapi
 from dapi import command, disconnect, speak
 import random
 import configparser
@@ -124,6 +125,11 @@ def fact_check(message, all_messages):
         prompt += f'{message["name"]}: {message["text"]}\n\n'
 
     return oai.call_gpt_single(prompt, 'gpt-4o-search-preview')
+
+def sora(prompt):
+    file_path = 'video.mp4'# oai.sora(prompt)
+    file = discord.File(file_path)
+    return file
     
 
 messages = []
@@ -192,6 +198,10 @@ async def on_message(message):
 
     async def cmd_fact_check():
         return fact_check(new_message, all_messages)
+    
+    async def cmd_sora():
+        file = sora(text)
+        await dapi.reply(message, file)
 
     
     if user_id in user_speak:
@@ -213,6 +223,7 @@ async def on_message(message):
         await send_command('play', '🔊', cmd_youtube),
         await send_command('summarize', '📋', cmd_summarize),
         await send_command('check', '✅', cmd_fact_check),
+        await send_command('sora', '🎥', cmd_sora),
     ]
 
     if not any(command_list):

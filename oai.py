@@ -42,7 +42,24 @@ def vision(image):
     
     return response.choices[0].message.content
 
-def call_gpt(messages, preface = None, model='gpt-4o'):
+def sora(prompt):
+    print('Generating video...')
+    video_poll = client.videos.create_and_poll(
+        model="sora-2",
+        prompt=prompt,
+    )
+
+    video = client.videos.download_content(
+        video_id=video_poll.id
+    )
+    print('Generation complete!')
+
+    with open('video.mp4', 'wb') as file:
+        file.write(video.read())
+
+    return 'video.mp4'
+
+def call_gpt(messages, preface = None, model='gpt-5-mini'):
     system_preface = [{'role': 'system', 'content': preface}] if preface else []
     completion = client.chat.completions.create(
             model=model,
@@ -53,7 +70,7 @@ def call_gpt(messages, preface = None, model='gpt-4o'):
 
     return answer
 
-def call_gpt_single(text, model='gpt-4o'):
+def call_gpt_single(text, model='gpt-5-mini'):
     return call_gpt([{'role': 'user', 'content': text}], model=model)
     
 def append_user_message(message, text):
