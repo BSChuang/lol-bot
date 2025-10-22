@@ -1,20 +1,20 @@
-# lol-bot
-Used to keep track of Spencer's stats with a bonus of fun Spencer facts
+# My Private Discord Bot
 
-# Requirements
-Python 3.8+. Tested on Python 3.11.
-`pip install -r requirements.txt`
+This is my private Discord bot built for voice, chat, and general nonsense.
 
-# Set-up
-In conf.yml, replace YOURTOKENHERE with your discord bot token.
+---
 
-Run the program by executing spencerbot.py
+## 🧠 Features
 
-# Running llama
-`export PATH=$PATH:/usr/local/go/bin`
+* **🔊 TTS in Voice Channels** – Converts text to speech in the voice channel.
+* **🎵 YouTube Audio** – Downloads and plays audio from YouTube links.
+* **🤖 ChatGPT Interface** – Ask questions, generate ideas, or chat.
+* **✍️ Summarize Messages** – TL;DR of recent messages in a channel.
+* **📚 Fact-Check Claims** – Verify facts.
+* **🍕 Domino’s Tracker™** – Records when your friend last ate Domino’s. Must have.
 
-Terminal 1:
-`./ollama serve`
+---
 
-Terminal 2:
-`./ollama run wizard-vicuna`
+## 🚨 Notes
+
+* This is meant for my private-use, but if you found this, feel free to clone.
