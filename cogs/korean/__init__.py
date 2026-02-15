@@ -1,7 +1,8 @@
 """Korean Language Learning Bot exercise cogs."""
 from . import (
     vocab,
-    translate,
+    translate_en_kr,
+    translate_kr_en,
     audio_cog,
     dictation,
     cloze,
@@ -12,7 +13,8 @@ from . import (
 
 __all__ = [
     'vocab',
-    'translate',
+    'translate_en_kr',
+    'translate_kr_en',
     'audio_cog',
     'dictation',
     'cloze',

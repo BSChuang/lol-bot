@@ -32,7 +32,8 @@ from dapi import command
 from korean_config import (
     ALLOWED_GUILD_ID,
     CHANNEL_VOCAB,
-    CHANNEL_TRANSLATE,
+    CHANNEL_TRANSLATE_EN_KR,
+    CHANNEL_TRANSLATE_KR_EN,
     CHANNEL_AUDIO,
     CHANNEL_DICTATION,
     CHANNEL_CLOZE,
@@ -46,7 +47,8 @@ from korean_config import (
 import anki_manager
 from cogs.korean import (
     vocab,
-    translate,
+    translate_en_kr,
+    translate_kr_en,
     audio_cog,
     dictation,
     cloze,
@@ -67,7 +69,8 @@ def setup_events(bot: commands.Bot, bot_state: BotState) -> None:
     # Korean bot channel routing map
     korean_channel_map = {
         CHANNEL_VOCAB: vocab.handle,
-        CHANNEL_TRANSLATE: translate.handle,
+        CHANNEL_TRANSLATE_EN_KR: translate_en_kr.handle,
+        CHANNEL_TRANSLATE_KR_EN: translate_kr_en.handle,
         CHANNEL_AUDIO: audio_cog.handle,
         CHANNEL_DICTATION: dictation.handle,
         CHANNEL_CLOZE: cloze.handle,

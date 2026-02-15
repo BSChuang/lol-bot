@@ -36,7 +36,8 @@ except ValueError:
 
 try:
     CHANNEL_VOCAB: int = int(os.getenv('CHANNEL_VOCAB', '0'))
-    CHANNEL_TRANSLATE: int = int(os.getenv('CHANNEL_TRANSLATE', '0'))
+    CHANNEL_TRANSLATE_EN_KR: int = int(os.getenv('CHANNEL_TRANSLATE_EN_KR', '0'))
+    CHANNEL_TRANSLATE_KR_EN: int = int(os.getenv('CHANNEL_TRANSLATE_KR_EN', '0'))
     CHANNEL_AUDIO: int = int(os.getenv('CHANNEL_AUDIO', '0'))
     CHANNEL_DICTATION: int = int(os.getenv('CHANNEL_DICTATION', '0'))
     CHANNEL_CLOZE: int = int(os.getenv('CHANNEL_CLOZE', '0'))

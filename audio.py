@@ -27,7 +27,7 @@ async def generate_tts(text: str, voice: str = 'nova', korean_accent: bool = Fal
     """
     try:
         # Prepend accent instruction to text if requested
-        tts_text = f"[Speak in a Korean accent slowly] {text}" if korean_accent else text
+        tts_text = f"[Speak very slowly with a Korean accent] {text}" if korean_accent else text
 
         response = await client.audio.speech.create(
             model='gpt-4o-mini-tts',

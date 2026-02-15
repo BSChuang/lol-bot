@@ -13,6 +13,7 @@ temp.ogg
 video.mp4
 __pycache__/*
 .claude/
+cogs/korean/__pycache__/
 
 # Environment and Logs
 .env

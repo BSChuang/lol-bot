@@ -1,4 +1,4 @@
-"""Translation exercise cog for Korean bot."""
+"""Korean to English translation exercise cog."""
 
 import random
 import discord
@@ -14,11 +14,11 @@ from korean_state import (
 from .base_handler import ExerciseHandler
 
 
-class TranslateHandler(ExerciseHandler):
-    """Handler for translation exercises."""
+class TranslateKrEnHandler(ExerciseHandler):
+    """Handler for Korean to English translation exercises."""
 
     def __init__(self):
-        super().__init__('translate')
+        super().__init__('translate_kr_en')
 
     async def generate_and_post_exercise(
         self,
@@ -49,22 +49,22 @@ class TranslateHandler(ExerciseHandler):
                 )
                 return
 
-            # Random direction
-            direction = random.choice(['en_to_kr', 'kr_to_en'])
+            # Korean to English
+            direction = 'kr_to_en'
 
             # Generate exercise
             async with message.channel.typing():
                 exercise = await gpt.generate_translation_exercise(words, direction)
 
             # Add metadata
-            exercise['type'] = 'translate'
+            exercise['type'] = 'translate_kr_en'
             exercise['deck'] = active_deck
 
             # Store in state
             set_exercise(user_id, exercise)
 
             # Post exercise embed
-            direction_label = '🇺🇸 → 🇰🇷' if direction == 'en_to_kr' else '🇰🇷 → 🇺🇸'
+            direction_label = '🇰🇷 → 🇺🇸'
 
             embed = discord.Embed(
                 title=f'Translation Exercise {direction_label}',
@@ -77,7 +77,7 @@ class TranslateHandler(ExerciseHandler):
             )
 
             await message.channel.send(embed=embed)
-            logger.info(f'Generated translation exercise for user {user_id} in deck {active_deck}')
+            logger.info(f'Generated Korean→English translation exercise for user {user_id} in deck {active_deck}')
 
         except RuntimeError as e:
             logger.exception(f'Error generating translation exercise: {e}')
@@ -161,7 +161,7 @@ class TranslateHandler(ExerciseHandler):
                 )
 
             await message.channel.send(embed=embed)
-            logger.info(f'Graded translation for user {user_id}: score {score}')
+            logger.info(f'Graded Korean→English translation for user {user_id}: score {score}')
 
             # Generate next exercise
             await self.generate_and_post_exercise(message, user_id)
@@ -209,9 +209,9 @@ class TranslateHandler(ExerciseHandler):
 
 
 # Module-level handler instance
-_handler = TranslateHandler()
+_handler = TranslateKrEnHandler()
 
 
 async def handle(message: discord.Message) -> None:
-    """Handle messages in #translate channel."""
+    """Handle messages in Korean→English translation channel."""
     await _handler.handle(message)
