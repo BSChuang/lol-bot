@@ -1,4 +1,4 @@
-config.ini
+# Configuration (unified in .env, which is gitignored below)
 prev_game_timestamp.txt
 calories.csv
 weight.csv
@@ -10,4 +10,11 @@ foods.json
 dominos.txt
 speech.mp3
 temp.ogg
+video.mp4
 __pycache__/*
+.claude/
+
+# Environment and Logs
+.env
+korean_bot.log
+spencerbot.log

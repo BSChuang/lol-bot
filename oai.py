@@ -1,12 +1,13 @@
 from openai import OpenAI
-import configparser
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 from time import sleep
 
-config = configparser.ConfigParser()
-config.read("config.ini")
+# Load .env file
+load_dotenv(dotenv_path=Path(__file__).parent / '.env')
 
-client = OpenAI(api_key=config['discord']['openai_key'])
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY', ''))
 
 async def tts(text):
     response = client.audio.speech.create(
