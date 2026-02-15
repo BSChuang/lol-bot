@@ -3,9 +3,27 @@
 
 import sqlite3
 import json
+import sys
+import os
 from pathlib import Path
 
-db_path = r"C:\Users\ben\AppData\Roaming\Anki2\User 2\collection.anki2"
+# Cross-platform Anki database path detection
+ANKI_PROFILE = os.getenv('ANKI_PROFILE', 'User 1')
+ANKI_DB_PATH = os.getenv('ANKI_DB_PATH')
+
+if ANKI_DB_PATH:
+    db_path = ANKI_DB_PATH
+else:
+    home = Path.home()
+    if sys.platform == 'win32':
+        # Windows: AppData\Roaming\Anki2
+        db_path = str(home / 'AppData' / 'Roaming' / 'Anki2' / ANKI_PROFILE / 'collection.anki2')
+    elif sys.platform == 'darwin':
+        # macOS: ~/Library/Application Support/Anki2
+        db_path = str(home / 'Library' / 'Application Support' / 'Anki2' / ANKI_PROFILE / 'collection.anki2')
+    else:
+        # Linux and other Unix: ~/.local/share/Anki2
+        db_path = str(home / '.local' / 'share' / 'Anki2' / ANKI_PROFILE / 'collection.anki2')
 
 print("=" * 80)
 print(f"Examining: {db_path}")

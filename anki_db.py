@@ -43,9 +43,19 @@ def get_db_path() -> str:
     if ANKI_DB_PATH:
         path = Path(ANKI_DB_PATH)
     else:
-        # Default Anki database location
+        # Default Anki database location depends on platform
+        import sys
         home = Path.home()
-        path = home / '.local' / 'share' / 'Anki2' / ANKI_PROFILE / 'collection.anki2'
+
+        if sys.platform == 'win32':
+            # Windows: AppData\Roaming\Anki2
+            path = home / 'AppData' / 'Roaming' / 'Anki2' / ANKI_PROFILE / 'collection.anki2'
+        elif sys.platform == 'darwin':
+            # macOS: ~/Library/Application Support/Anki2
+            path = home / 'Library' / 'Application Support' / 'Anki2' / ANKI_PROFILE / 'collection.anki2'
+        else:
+            # Linux and other Unix: ~/.local/share/Anki2
+            path = home / '.local' / 'share' / 'Anki2' / ANKI_PROFILE / 'collection.anki2'
 
     if not path.exists():
         raise RuntimeError(

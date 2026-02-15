@@ -67,20 +67,18 @@ def sync_to_ankiweb(profile: str, username: str, password: str) -> tuple[bool, s
         if process.poll() is None:
             logger.info('Terminating Anki process after sync')
             try:
-                # On Windows, use taskkill to forcefully close Anki and all child processes
-                if os.name == 'nt':  # Windows
-                    subprocess.run(['taskkill', '/F', '/T', '/IM', 'anki.exe'],
-                                 capture_output=True, timeout=5)
-                    subprocess.run(['taskkill', '/F', '/T', '/IM', 'python.exe'],
-                                 capture_output=True, timeout=5)
-                else:  # Unix/Linux/Mac
-                    process.terminate()
-                    time.sleep(2)
-                    if process.poll() is None:
-                        process.kill()
+                # Try graceful termination first, then forceful if needed
+                process.terminate()
+                time.sleep(2)
+                if process.poll() is None:
+                    # Still running, kill forcefully
+                    process.kill()
             except Exception as e:
                 logger.warning(f'Error terminating Anki: {e}')
-                process.kill()
+                try:
+                    process.kill()
+                except Exception:
+                    pass
 
         # Get output (don't wait too long)
         try:
@@ -108,9 +106,16 @@ def _find_anki_binary() -> str | None:
     """
     Find the Anki executable in common locations.
 
+    Searches platform-specific paths:
+    - Windows: Program Files, AppData
+    - macOS: /Applications, ~/Applications
+    - Linux: /usr/bin, /usr/local/bin, /opt, snap
+
     Returns:
         Path to Anki binary or None if not found
     """
+    import sys
+
     # Check environment variable first
     if ANKI_BIN:
         if Path(ANKI_BIN).exists():
@@ -121,15 +126,37 @@ def _find_anki_binary() -> str | None:
     if anki_path:
         return anki_path
 
-    # Check common installation paths
+    # Platform-specific search paths
     home = Path.home()
-    candidates = [
-        home / 'anki' / 'anki',
-        home / 'Applications' / 'anki' / 'anki',
-        Path('/usr/bin/anki'),
-        Path('/usr/local/bin/anki'),
-        Path('/opt/anki/anki'),
-    ]
+    candidates = []
+
+    if sys.platform == 'win32':
+        # Windows paths
+        program_files = Path(os.environ.get('ProgramFiles', 'C:\\Program Files'))
+        program_files_x86 = Path(os.environ.get('ProgramFiles(x86)', 'C:\\Program Files (x86)'))
+        appdata = Path(os.environ.get('APPDATA', home / 'AppData' / 'Roaming'))
+
+        candidates.extend([
+            program_files / 'Anki' / 'anki.exe',
+            program_files_x86 / 'Anki' / 'anki.exe',
+            appdata / 'Anki' / 'anki.exe',
+            home / 'anki' / 'anki.exe',
+        ])
+    elif sys.platform == 'darwin':
+        # macOS paths
+        candidates.extend([
+            Path('/Applications/Anki.app/Contents/MacOS/Anki'),
+            home / 'Applications' / 'Anki.app' / 'Contents' / 'MacOS' / 'Anki',
+        ])
+    else:
+        # Linux and other Unix paths
+        candidates.extend([
+            Path('/usr/bin/anki'),
+            Path('/usr/local/bin/anki'),
+            Path('/opt/anki/anki'),
+            Path('/snap/bin/anki'),
+            home / '.local' / 'bin' / 'anki',
+        ])
 
     for candidate in candidates:
         if candidate.exists():
