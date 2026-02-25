@@ -117,11 +117,15 @@ async def generate_translation_exercise(
         Dict with direction, prompt, answer, words_used, difficulty_note
     """
     try:
+        import random
         direction_text = (
             'English to Korean'
             if direction == 'en_to_kr'
             else 'Korean to English'
         )
+
+        # Randomly select up to 5 words from the provided list
+        selected_words = random.sample(words, min(5, len(words)))
 
         response = await client.chat.completions.create(
             model='gpt-5-mini',
@@ -134,6 +138,7 @@ async def generate_translation_exercise(
                         'appropriate for intermediate learners. '
                         f'Direction: {direction_text}. Return a JSON object with: '
                         'direction, prompt, answer, words_used (list), difficulty_note. '
+                        'Provide difficulty_note in English. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -141,7 +146,7 @@ async def generate_translation_exercise(
                     'role': 'user',
                     'content': (
                         f'Generate a {direction_text} translation exercise using these words: '
-                        f'{", ".join(w["korean"] for w in words[:5])}'
+                        f'{", ".join(w["korean"] for w in selected_words)}'
                     )
                 }
             ]
@@ -185,6 +190,7 @@ async def grade_translation(
                         'You are a Korean language teacher grading translations. '
                         'Return JSON with: correct (bool), score (0-100), feedback (string), '
                         'corrected (null if correct, otherwise corrected version). '
+                        'Provide all feedback and explanations in English. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -278,6 +284,7 @@ async def grade_audio_response(
                         'Grade an audio listening response. Student may answer with '
                         'English meaning or romanization. Return JSON with: correct (bool), '
                         'score (0-100), feedback, corrected (null if correct). '
+                        'Provide all feedback in English. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -367,6 +374,7 @@ async def grade_dictation(correct: str, student: str) -> dict:
                         'Grade a Korean dictation. Strip punctuation (.,!?。) before comparing. '
                         'Provide character-level diff using **correct** and ~~wrong~~ markdown. '
                         'Return JSON with: correct (bool), score (0-100), feedback, diff, corrected. '
+                        'Provide all feedback in English. '
                         'Return ONLY JSON, no markdown in JSON values.'
                     )
                 },
@@ -455,7 +463,9 @@ async def grade_cloze(blanks: list[dict], student_answers: str) -> dict:
                     'content': (
                         'Grade cloze (fill-in-the-blank) responses. Parse answers in order. '
                         'Return JSON with: results (list of {position, correct (bool), student, answer}), '
-                        'score (0-100), feedback. Return ONLY JSON, no markdown.'
+                        'score (0-100), feedback. '
+                        'Provide all feedback in English. '
+                        'Return ONLY JSON, no markdown.'
                     )
                 },
                 {
@@ -550,7 +560,9 @@ async def grade_reading(
                     'content': (
                         'Grade reading comprehension. Parse student answers (numbered or prose). '
                         'Return JSON with: results (list of {question, correct (bool), feedback}), '
-                        'score (0-100), overall_feedback. Return ONLY JSON, no markdown.'
+                        'score (0-100), overall_feedback. '
+                        'Provide all feedback in English. '
+                        'Return ONLY JSON, no markdown.'
                     )
                 },
                 {
@@ -595,6 +607,7 @@ async def generate_write_prompt(words: list[dict]) -> dict:
                         'prompt (scenario for student to write about), '
                         'target_words (list of Korean words to use), '
                         'english_hint (context hint in English). '
+                        'Provide english_hint in English. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -648,6 +661,7 @@ async def grade_writing(
                         'score (0-100), target_words_used (list), target_words_missed (list), '
                         'corrections (list of max 5: {original, corrected, explanation}), '
                         'overall_feedback, improved_version. '
+                        'Provide all explanations and feedback in English. '
                         'Return ONLY JSON, no markdown in values.'
                     )
                 },
@@ -693,6 +707,7 @@ async def generate_build_exercise(words: list[dict]) -> dict:
                         'Generate a B1-level sentence building exercise appropriate for intermediate learners. '
                         'Pick 3-5 words and create an example sentence using them. Return JSON with: '
                         'given_words (list of {korean, english}), difficulty_note, example_answer. '
+                        'Provide difficulty_note in English. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -743,6 +758,7 @@ async def grade_build(
                         'Grade a Korean sentence built from given words. Return JSON with: '
                         'correct (bool), score (0-100), all_words_used (bool), grammar_correct (bool), '
                         'feedback, corrected (null if correct), example_answer (always include). '
+                        'Provide all feedback in English. '
                         'Return ONLY JSON, no markdown in values.'
                     )
                 },
@@ -764,3 +780,37 @@ async def grade_build(
     except Exception as e:
         logger.exception(f'Error grading build: {e}')
         raise RuntimeError(f'Failed to grade build: {e}')
+
+
+async def transcribe_audio(audio_bytes: bytes, filename: str = 'audio.mp3') -> str:
+    """
+    Transcribe audio to text using OpenAI Whisper API.
+
+    Args:
+        audio_bytes: Raw audio file bytes
+        filename: Filename for the audio (including extension)
+
+    Returns:
+        Transcribed text
+
+    Raises:
+        RuntimeError: If transcription fails
+    """
+    try:
+        from io import BytesIO
+        
+        # Create a file-like object from bytes
+        audio_file = BytesIO(audio_bytes)
+        audio_file.name = filename
+        
+        response = await client.audio.transcriptions.create(
+            model='whisper-1',
+            file=audio_file,
+            language='ko'  # Korean language
+        )
+        
+        return response.text.strip()
+    
+    except Exception as e:
+        logger.exception(f'Error transcribing audio: {e}')
+        raise RuntimeError(f'Failed to transcribe audio: {e}')

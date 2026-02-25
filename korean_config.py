@@ -70,25 +70,31 @@ def setup_logging() -> logging.Logger:
     Returns:
         Configured logger instance.
     """
+    import sys
+    
     logger = logging.getLogger('korean_bot')
     logger.setLevel(logging.INFO)
 
     # Clear any existing handlers
     logger.handlers.clear()
 
-    # Console handler
-    console_handler = logging.StreamHandler()
+    # Console handler with UTF-8 encoding
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
+    # Set encoding on the stream
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
     console_formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     console_handler.setFormatter(console_formatter)
 
-    # File handler with rotation
+    # File handler with rotation and UTF-8 encoding
     file_handler = RotatingFileHandler(
         'korean_bot.log',
         maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
+        backupCount=5,
+        encoding='utf-8'
     )
     file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter(

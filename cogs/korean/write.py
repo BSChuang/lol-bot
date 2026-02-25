@@ -69,7 +69,7 @@ class WriteHandler(ExerciseHandler):
                 embed.add_field(name='Hint', value=exercise['english_hint'], inline=False)
 
             embed.set_footer(
-                text=f'Active deck: {active_deck} · \'skip\' to reveal · \'stop\' to end · \'list\' for deck info'
+                text=f'Active deck: {active_deck} · \'skip\' to reveal · \'stop\' to end · \'list\' for deck info · Audio responses supported'
             )
 
             await message.channel.send(embed=embed)

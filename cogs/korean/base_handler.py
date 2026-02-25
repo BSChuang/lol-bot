@@ -2,9 +2,11 @@
 
 from abc import ABC, abstractmethod
 import discord
+import aiohttp
 
 from korean_config import logger
 import anki_db
+import gpt
 from korean_state import (
     get_active_deck,
     set_active_deck,
@@ -26,6 +28,66 @@ class ExerciseHandler(ABC):
             exercise_type: Type identifier (e.g., 'translate', 'audio', 'dictation')
         """
         self.exercise_type = exercise_type
+
+    async def _process_audio_attachment(self, message: discord.Message) -> str | None:
+        """
+        Process audio attachment from message and transcribe to text.
+
+        Supported audio formats: mp3, wav, ogg, m4a, webm, flac
+
+        Args:
+            message: Discord message potentially containing audio attachment
+
+        Returns:
+            Transcribed text or None if no audio attachment found
+        """
+        audio_extensions = ('.mp3', '.wav', '.ogg', '.m4a', '.webm', '.flac')
+        
+        for attachment in message.attachments:
+            if attachment.filename.lower().endswith(audio_extensions):
+                try:
+                    # Download audio file
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(attachment.url) as resp:
+                            if resp.status != 200:
+                                logger.error(f'Failed to download audio: HTTP {resp.status}')
+                                return None
+                            audio_bytes = await resp.read()
+                    
+                    # Transcribe using OpenAI Whisper
+                    transcribed_text = await gpt.transcribe_audio(audio_bytes, attachment.filename)
+                    logger.info(f'Transcribed audio message from user {message.author.id}: {transcribed_text[:50]}...')
+                    return transcribed_text
+                
+                except Exception as e:
+                    logger.exception(f'Error processing audio attachment: {e}')
+                    return None
+        
+        return None
+
+    async def _get_student_answer(self, message: discord.Message) -> str | None:
+        """
+        Extract student answer from message - either text or audio.
+
+        Args:
+            message: Discord message
+
+        Returns:
+            Student answer text or None if neither text nor audio found
+        """
+        # Try audio first
+        if message.attachments:
+            audio_text = await self._process_audio_attachment(message)
+            if audio_text:
+                return audio_text
+        
+        # Fall back to text content
+        text = message.content.strip()
+        if text:
+            return text
+        
+        return None
+
 
     async def handle(self, message: discord.Message) -> None:
         """
@@ -118,7 +180,19 @@ class ExerciseHandler(ABC):
         if exercise:
             # Ensure exercise type matches this channel
             if exercise.get('type') == self.exercise_type:
-                await self.grade_and_continue(message, user_id, exercise, text)
+                # Get student answer - supports both text and audio
+                student_answer = await self._get_student_answer(message)
+                if not student_answer:
+                    await message.channel.send(
+                        embed=discord.Embed(
+                            title='❌ No Answer',
+                            description='Please send a text message or audio recording.',
+                            color=discord.Color.red()
+                        )
+                    )
+                    return
+                
+                await self.grade_and_continue(message, user_id, exercise, student_answer)
                 return
             else:
                 # Wrong exercise type, clear and generate new one
