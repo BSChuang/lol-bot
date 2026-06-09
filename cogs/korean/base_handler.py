@@ -206,9 +206,7 @@ class ExerciseHandler(ABC):
         try:
             active_deck = get_active_deck(user_id)
             deck_names = anki_db.get_deck_names()
-            deck_list = '\n'.join(f'• {name}' for name in deck_names[:10])
-            if len(deck_names) > 10:
-                deck_list += f'\n... and {len(deck_names) - 10} more'
+            deck_list = '\n'.join(f'• {name}' for name in deck_names)
 
             if active_deck:
                 # Use get_all_words for 'All' deck, otherwise get words from specific deck
@@ -275,9 +273,7 @@ class ExerciseHandler(ABC):
         """Handle case where no deck is selected."""
         try:
             deck_names = anki_db.get_deck_names()
-            deck_list = '\n'.join(f'• {name}' for name in deck_names[:10])
-            if len(deck_names) > 10:
-                deck_list += f'\n... and {len(deck_names) - 10} more'
+            deck_list = '\n'.join(f'• {name}' for name in deck_names)
 
             await message.channel.send(
                 embed=discord.Embed(

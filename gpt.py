@@ -128,6 +128,12 @@ async def generate_translation_exercise(
 
         # Randomly select up to 3 words from the provided list
         selected_words = random.sample(words, min(3, len(words)))
+        
+        # Format words with definitions
+        words_with_defs = ', '.join(
+            f"{w['korean']}: ({w.get('english', '')})" 
+            for w in selected_words
+        )
 
         response = await client.chat.completions.create(
             model='gpt-5.4',
@@ -138,7 +144,10 @@ async def generate_translation_exercise(
                     'content': (
                         'You are a Korean language teacher. For each provided word, generate a B1-level '
                         'sentence appropriate for beginner-intermediate learners. Create exactly one sentence per word in '
-                        'the source language (based on the direction). Return a JSON object with the following keys: '
+                        'the source language (based on the direction). IMPORTANT: Output sentences should contain ONLY the '
+                        'sentences themselves, with NO word labels, definitions, or prefix text. For example, output just '
+                        '"I want to visit my grandmother this weekend." not "visit: I want to visit...".'
+                        'Return a JSON object with the following keys: '
                         'direction, prompt, answer, words_used (list), difficulty_note. The `prompt` should contain the '
                         'source-language sentences (one per line or numbered). The `answer` should contain the corresponding '
                         'translations in the target language (one per line or numbered in the same order). Provide '
@@ -148,9 +157,8 @@ async def generate_translation_exercise(
                 {
                     'role': 'user',
                     'content': (
-                        f'Generate one {direction_text} translation sentence for each of these words: '
-                        f'{", ".join(w["korean"] for w in selected_words)}. '\
-                        'Return prompt and answer as described.'
+                        f'Generate one {direction_text} translation sentence for each of these words. Definitions are provided for context only: '
+                        f'{words_with_defs}. Output sentences must NOT include the word labels or definitions.'
                     )
                 }
             ]
@@ -219,15 +227,18 @@ async def grade_translation(
 
 async def generate_audio_exercise(words: list[dict]) -> dict:
     """
-    Generate an audio listening exercise.
+    Generate an audio listening exercise with a single sentence.
 
     Args:
         words: List of word dicts
 
     Returns:
-        Dict with korean, romanization, english, tts_text
+        Dict with korean, english, tts_text
     """
     try:
+        import random
+        selected_word = random.choice(words)
+        
         response = await client.chat.completions.create(
             model='gpt-5.4',
             response_format={'type': 'json_object'},
@@ -235,16 +246,17 @@ async def generate_audio_exercise(words: list[dict]) -> dict:
                 {
                     'role': 'system',
                     'content': (
-                        'You are a Korean language teacher. Generate a B1-level audio exercise with a '
-                        'sentence in Korean appropriate for beginner-intermediate learners. Return JSON with: korean, romanization, english, tts_text. '
+                        'You are a Korean language teacher. Generate a B1-level audio exercise with a single Korean sentence '
+                        'appropriate for beginner-intermediate learners. Return JSON with: korean (the sentence), '
+                        'english (translation), tts_text (the Korean sentence for text-to-speech). '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
                 {
                     'role': 'user',
                     'content': (
-                        f'Generate an audio exercise using these Korean words: '
-                        f'{", ".join(w["korean"] for w in words[:5])}'
+                        f'Generate an audio exercise using this word: '
+                        f'{selected_word["korean"]} ({selected_word.get("english", "")})'
                     )
                 }
             ]
@@ -313,15 +325,18 @@ async def grade_audio_response(
 
 async def generate_dictation_exercise(words: list[dict]) -> dict:
     """
-    Generate a dictation exercise with a full sentence.
+    Generate a dictation exercise with a single sentence.
 
     Args:
         words: List of word dicts
 
     Returns:
-        Dict with korean, english, tts_text, words_used
+        Dict with korean, english, tts_text
     """
     try:
+        import random
+        selected_word = random.choice(words)
+        
         response = await client.chat.completions.create(
             model='gpt-5.4',
             response_format={'type': 'json_object'},
@@ -329,17 +344,17 @@ async def generate_dictation_exercise(words: list[dict]) -> dict:
                 {
                     'role': 'system',
                     'content': (
-                        'Generate a B1-level dictation exercise with a full Korean sentence (not just words) '
+                        'Generate a B1-level dictation exercise with a single Korean sentence '
                         'appropriate for beginner-intermediate learners. '
-                        'Return JSON with: korean, english, tts_text, words_used (list of words in sentence). '
+                        'Return JSON with: korean (the sentence), english (translation), tts_text (the Korean sentence for dictation). '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
                 {
                     'role': 'user',
                     'content': (
-                        f'Generate a dictation using these words: '
-                        f'{", ".join(w["korean"] for w in words[:5])}'
+                        f'Generate a dictation exercise using this word: '
+                        f'{selected_word["korean"]} ({selected_word.get("english", "")})'
                     )
                 }
             ]
