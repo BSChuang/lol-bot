@@ -43,7 +43,7 @@ async def generate_vocab_list(raw_words: str) -> list[dict]:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -128,14 +128,14 @@ async def generate_translation_exercise(
         selected_words = random.sample(words, min(5, len(words)))
 
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
                         'You are a Korean language teacher. Generate a B1-level translation exercise '
-                        'appropriate for intermediate learners. '
+                        'appropriate for beginner-intermediate learners. The exercise should be no more than three sentences. '
                         f'Direction: {direction_text}. Return a JSON object with: '
                         'direction, prompt, answer, words_used (list), difficulty_note. '
                         'Provide difficulty_note in English. '
@@ -181,7 +181,7 @@ async def grade_translation(
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -225,14 +225,14 @@ async def generate_audio_exercise(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
                         'You are a Korean language teacher. Generate a B1-level audio exercise with a '
-                        'sentence in Korean appropriate for intermediate learners. Return JSON with: korean, romanization, english, tts_text. '
+                        'sentence in Korean appropriate for beginner-intermediate learners. Return JSON with: korean, romanization, english, tts_text. '
                         'Return ONLY JSON, no markdown.'
                     )
                 },
@@ -275,7 +275,7 @@ async def grade_audio_response(
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -319,14 +319,14 @@ async def generate_dictation_exercise(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
                         'Generate a B1-level dictation exercise with a full Korean sentence (not just words) '
-                        'appropriate for intermediate learners. '
+                        'appropriate for beginner-intermediate learners. '
                         'Return JSON with: korean, english, tts_text, words_used (list of words in sentence). '
                         'Return ONLY JSON, no markdown.'
                     )
@@ -365,14 +365,13 @@ async def grade_dictation(correct: str, student: str) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
-                        'Grade a Korean dictation. Strip punctuation (.,!?。) before comparing. '
-                        'Provide character-level diff using **correct** and ~~wrong~~ markdown. '
+                        'Grade a Korean dictation. '
                         'Return JSON with: correct (bool), score (0-100), feedback, diff, corrected. '
                         'Provide all feedback in English. '
                         'Return ONLY JSON, no markdown in JSON values.'
@@ -408,13 +407,13 @@ async def generate_cloze_exercise(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
-                        'Generate a B1-level cloze exercise appropriate for intermediate learners: '
+                        'Generate a B1-level cloze exercise appropriate for beginner-intermediate learners: '
                         '4-6 sentence Korean paragraph with 3-5 blanks numbered _1_, _2_, etc. '
                         'Return JSON with: paragraph (with blanks), '
                         'blanks (list of {position, korean, english}), full_paragraph (with words filled in), '
@@ -455,7 +454,7 @@ async def grade_cloze(blanks: list[dict], student_answers: str) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -500,13 +499,13 @@ async def generate_reading_exercise(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
-                        'Generate a B1-level reading exercise appropriate for intermediate learners: '
+                        'Generate a B1-level reading exercise appropriate for beginner-intermediate learners: '
                         '6-10 sentence Korean story with 3 English comprehension questions. '
                         'Return JSON with: story_korean, '
                         'story_english (translation), questions (list), answers (list), words_used. '
@@ -552,7 +551,7 @@ async def grade_reading(
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -596,13 +595,13 @@ async def generate_write_prompt(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
-                        'Generate a B1-level Korean writing prompt appropriate for intermediate learners. '
+                        'Generate a B1-level Korean writing prompt appropriate for beginner-intermediate learners. '
                         'Return JSON with: '
                         'prompt (scenario for student to write about), '
                         'target_words (list of Korean words to use), '
@@ -651,7 +650,7 @@ async def grade_writing(
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
@@ -698,13 +697,13 @@ async def generate_build_exercise(words: list[dict]) -> dict:
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
                     'role': 'system',
                     'content': (
-                        'Generate a B1-level sentence building exercise appropriate for intermediate learners. '
+                        'Generate a B1-level sentence building exercise appropriate for beginner-intermediate learners. '
                         'Pick 3-5 words and create an example sentence using them. Return JSON with: '
                         'given_words (list of {korean, english}), difficulty_note, example_answer. '
                         'Provide difficulty_note in English. '
@@ -749,7 +748,7 @@ async def grade_build(
     """
     try:
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4',
             response_format={'type': 'json_object'},
             messages=[
                 {
