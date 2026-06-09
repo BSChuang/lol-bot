@@ -10,6 +10,7 @@ from korean_config import logger, OPENAI_API_KEY
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 
+
 def _strip_markdown(text: str) -> str:
     """
     Strip markdown code fences before json.loads.
@@ -105,7 +106,8 @@ async def generate_translation_exercise(
     direction: str
 ) -> dict:
     """
-    Generate a translation exercise.
+    Generate a translation exercise by selecting 3 words and creating one
+    sentence per word.
 
     Direction: en_to_kr or kr_to_en
 
@@ -114,7 +116,7 @@ async def generate_translation_exercise(
         direction: Translation direction
 
     Returns:
-        Dict with direction, prompt, answer, words_used, difficulty_note
+        Dict with direction, exercises (list of {word, prompt, answer}), words_used, difficulty_note
     """
     try:
         import random
@@ -124,8 +126,8 @@ async def generate_translation_exercise(
             else 'Korean to English'
         )
 
-        # Randomly select up to 5 words from the provided list
-        selected_words = random.sample(words, min(5, len(words)))
+        # Randomly select up to 3 words from the provided list
+        selected_words = random.sample(words, min(3, len(words)))
 
         response = await client.chat.completions.create(
             model='gpt-5.4',
@@ -134,18 +136,17 @@ async def generate_translation_exercise(
                 {
                     'role': 'system',
                     'content': (
-                        'You are a Korean language teacher. Generate a B1-level translation exercise '
-                        'appropriate for beginner-intermediate learners. The exercise should be no more than three sentences. '
-                        f'Direction: {direction_text}. Return a JSON object with: '
-                        'direction, prompt, answer, words_used (list), difficulty_note. '
-                        'Provide difficulty_note in English. '
-                        'Return ONLY JSON, no markdown.'
+                        'You are a Korean language teacher. For each provided word, generate a B1-level '
+                        'translation sentence appropriate for beginner-intermediate learners. Create exactly one '
+                        'sentence per word in the source language (based on the direction). Return a JSON object with: '
+                        'direction, exercises (list of {word, prompt, answer}), words_used (list), difficulty_note. '
+                        'Provide difficulty_note in English. Return ONLY JSON, no markdown.'
                     )
                 },
                 {
                     'role': 'user',
                     'content': (
-                        f'Generate a {direction_text} translation exercise using these words: '
+                        f'Generate one {direction_text} translation sentence for each of these words: '
                         f'{", ".join(w["korean"] for w in selected_words)}'
                     )
                 }
