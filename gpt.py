@@ -116,7 +116,7 @@ async def generate_translation_exercise(
         direction: Translation direction
 
     Returns:
-        Dict with direction, exercises (list of {word, prompt, answer}), words_used, difficulty_note
+        Dict with direction, prompt (source sentences), answer (translations), words_used, difficulty_note
     """
     try:
         import random
@@ -137,17 +137,20 @@ async def generate_translation_exercise(
                     'role': 'system',
                     'content': (
                         'You are a Korean language teacher. For each provided word, generate a B1-level '
-                        'translation sentence appropriate for beginner-intermediate learners. Create exactly one '
-                        'sentence per word in the source language (based on the direction). Return a JSON object with: '
-                        'direction, exercises (list of {word, prompt, answer}), words_used (list), difficulty_note. '
-                        'Provide difficulty_note in English. Return ONLY JSON, no markdown.'
+                        'sentence appropriate for beginner-intermediate learners. Create exactly one sentence per word in '
+                        'the source language (based on the direction). Return a JSON object with the following keys: '
+                        'direction, prompt, answer, words_used (list), difficulty_note. The `prompt` should contain the '
+                        'source-language sentences (one per line or numbered). The `answer` should contain the corresponding '
+                        'translations in the target language (one per line or numbered in the same order). Provide '
+                        'difficulty_note in English. Return ONLY JSON, no markdown.'
                     )
                 },
                 {
                     'role': 'user',
                     'content': (
                         f'Generate one {direction_text} translation sentence for each of these words: '
-                        f'{", ".join(w["korean"] for w in selected_words)}'
+                        f'{", ".join(w["korean"] for w in selected_words)}. '\
+                        'Return prompt and answer as described.'
                     )
                 }
             ]
