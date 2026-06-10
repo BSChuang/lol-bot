@@ -158,7 +158,7 @@ def get_words_in_deck(deck_name: str) -> list[dict]:
     Get all words in a specific deck.
 
     Joins cards and notes tables, splits fields on \x1f separator.
-    Field order: 0=Korean, 1=English
+    Field order: 0=Korean, 1=empty, 2=English
 
     Args:
         deck_name: Exact deck name (case-sensitive)
@@ -215,13 +215,13 @@ def get_words_in_deck(deck_name: str) -> list[dict]:
         ''', (deck_id,))
 
         words = []
-        for nid, flds, tags in cursor.fetchall():
+        for idx, (nid, flds, tags) in enumerate(cursor.fetchall()):
             # Split fields on unit separator (0x1f)
             fields = flds.split('\x1f')
 
-            if len(fields) >= 2:
+            if len(fields) >= 3:
                 korean = fields[0].strip()
-                english = fields[1].strip()
+                english = fields[2].strip()  # English is in field 2, not field 1
 
                 # Parse tags
                 tag_list = tags.split() if tags.strip() else []

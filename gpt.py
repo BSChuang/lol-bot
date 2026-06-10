@@ -106,8 +106,8 @@ async def generate_translation_exercise(
     direction: str
 ) -> dict:
     """
-    Generate a translation exercise by selecting 3 words and creating one
-    sentence per word.
+    Generate a translation exercise by selecting 1 word and creating one
+    sentence for it.
 
     Direction: en_to_kr or kr_to_en
 
@@ -116,7 +116,7 @@ async def generate_translation_exercise(
         direction: Translation direction
 
     Returns:
-        Dict with direction, prompt (source sentences), answer (translations), words_used, difficulty_note
+        Dict with direction, prompt (source sentence), answer (translation), words_used, difficulty_note
     """
     try:
         import random
@@ -126,8 +126,8 @@ async def generate_translation_exercise(
             else 'Korean to English'
         )
 
-        # Randomly select up to 3 words from the provided list
-        selected_words = random.sample(words, min(3, len(words)))
+        # Randomly select 1 word from the provided list
+        selected_words = random.sample(words, 1)
         
         # Format words with definitions
         words_with_defs = ', '.join(
